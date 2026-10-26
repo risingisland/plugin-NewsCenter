@@ -1,0 +1,7 @@
+.CodeMirror { font-family: monospace; height: 350px; color: black; direction: ltr; }
+.CodeMirror-lines { padding: 4px 0; }
+.CodeMirror pre.CodeMirror-line { padding: 0 4px; }
+.CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler { background-color: white; }
+.CodeMirror-gutters { border-right: 1px solid #ddd; background-color: #f7f7f7; white-space: nowrap; }
+.CodeMirror-linenumber { padding: 0 3px 0 5px; min-width: 20px; text-align: right; color: #999; white-space: nowrap; }
+.CodeMirror-cursor { border-left: 1px solid black; }
