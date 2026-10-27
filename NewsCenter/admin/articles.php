@@ -1,19 +1,34 @@
 <?php
 if (!defined('IN_GS')) { die('Direct access denied.'); }
 
-$search      = isset($_GET['q']) ? trim($_GET['q']) : '';
-$status      = isset($_GET['status_filter']) && in_array($_GET['status_filter'], ['published', 'draft']) ? $_GET['status_filter'] : '';
-$category_id = isset($_GET['category_id']) ? (int)$_GET['category_id'] : 0;
-$page        = isset($_GET['p']) ? max(1, (int)$_GET['p']) : 1;
-$limit       = 15;
-$offset      = ($page - 1) * $limit;
+$db = nc_get_db();
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$status_filter = isset($_GET['status_filter']) ? trim($_GET['status_filter']) : '';
 
-$data = nc_get_articles_admin($search, $status, $category_id, $limit, $offset);
-$articles = $data['items'];
-$total_items = $data['total'];
-$total_pages = ceil($total_items / $limit);
+$where = [];
+$params = [];
 
-$categories = nc_get_categories_with_counts();
+if ($search !== '') {
+    $where[] = "(title LIKE :q OR slug LIKE :q)";
+    $params[':q'] = '%' . $search . '%';
+}
+
+if ($status_filter === 'published') {
+    $where[] = "status = 'published' AND published_at <= CURRENT_TIMESTAMP";
+} elseif ($status_filter === 'scheduled') {
+    $where[] = "status = 'published' AND published_at > CURRENT_TIMESTAMP";
+} elseif ($status_filter === 'draft') {
+    $where[] = "status = 'draft'";
+}
+
+$where_sql = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+
+$stmt = $db->prepare("SELECT * FROM nc_articles {$where_sql} ORDER BY published_at DESC");
+$stmt->execute($params);
+$articles = $stmt->fetchAll();
+
+$settings = nc_get_settings();
+$date_format = !empty($settings['date_format']) ? $settings['date_format'] : 'M j, Y';
 ?>
 
 <div class="nc-container">
@@ -22,82 +37,71 @@ $categories = nc_get_categories_with_counts();
     <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=edit-article" class="nc-btn nc-btn-primary">+ <?= i18n_r('NewsCenter/NEW_ARTICLE') ?></a>
   </div>
 
-  <div class="nc-card nc-filter-bar">
-    <form method="GET" action="load.php" class="nc-filter-form">
+  <div class="nc-card">
+    <!-- Filter bar -->
+    <form method="GET" action="load.php" style="display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; align-items:center;">
       <input type="hidden" name="id" value="<?= NC_PLUGIN_ID ?>">
       <input type="hidden" name="action" value="articles">
 
-      <div class="nc-filter-field">
-        <input type="text" name="q" value="<?= htmlspecialchars($search) ?>" placeholder="<?= i18n_r('NewsCenter/SEARCH_PLACEHOLDER') ?>" class="nc-input">
-      </div>
+      <input type="search" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Search articles..." class="nc-input" style="max-width:280px;">
 
-      <div class="nc-filter-field">
-        <select name="status_filter" class="nc-select">
-          <option value=""><?= i18n_r('NewsCenter/ALL_STATUSES') ?></option>
-          <option value="published" <?= ($status === 'published') ? 'selected' : '' ?>><?= i18n_r('NewsCenter/PUBLISHED') ?></option>
-          <option value="draft" <?= ($status === 'draft') ? 'selected' : '' ?>><?= i18n_r('NewsCenter/DRAFT') ?></option>
-        </select>
-      </div>
+      <select name="status_filter" class="nc-select" style="max-width:180px;">
+        <option value="">All Statuses</option>
+        <option value="published" <?= ($status_filter === 'published') ? 'selected' : '' ?>><?= i18n_r('NewsCenter/PUBLISHED') ?></option>
+        <option value="scheduled" <?= ($status_filter === 'scheduled') ? 'selected' : '' ?>>Scheduled</option>
+        <option value="draft" <?= ($status_filter === 'draft') ? 'selected' : '' ?>><?= i18n_r('NewsCenter/DRAFT') ?></option>
+      </select>
 
-      <div class="nc-filter-field">
-        <select name="category_id" class="nc-select">
-          <option value="0"><?= i18n_r('NewsCenter/ALL_CATEGORIES') ?></option>
-          <?php foreach ($categories as $cat): ?>
-            <option value="<?= (int)$cat['id'] ?>" <?= ($category_id === (int)$cat['id']) ? 'selected' : '' ?>>
-              <?= htmlspecialchars($cat['name']) ?> (<?= (int)$cat['article_count'] ?>)
-            </option>
-          <?php endforeach; ?>
-        </select>
-      </div>
-
-      <div class="nc-filter-actions">
-        <button type="submit" class="nc-btn nc-btn-secondary"><?= i18n_r('NewsCenter/FILTER') ?></button>
-        <?php if (!empty($search) || !empty($status) || $category_id > 0): ?>
-          <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=articles" class="nc-btn nc-btn-outline"><?= i18n_r('NewsCenter/RESET') ?></a>
-        <?php endif; ?>
-      </div>
+      <button type="submit" class="nc-btn nc-btn-secondary">Filter</button>
+      <?php if (!empty($search) || !empty($status_filter)): ?>
+        <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=articles" class="nc-btn nc-btn-outline">Reset</a>
+      <?php endif; ?>
     </form>
-  </div>
 
-  <div class="nc-card nc-table-card">
     <?php if (!empty($articles)): ?>
       <table class="nc-table">
         <thead>
           <tr>
             <th><?= i18n_r('NewsCenter/TITLE') ?></th>
             <th><?= i18n_r('NewsCenter/STATUS') ?></th>
-            <th><?= i18n_r('NewsCenter/AUTHOR') ?></th>
-            <th><?= i18n_r('NewsCenter/DATE') ?></th>
+            <th><?= i18n_r('NewsCenter/PUB_DATE') ?></th>
             <th class="nc-text-right"><?= i18n_r('NewsCenter/ACTIONS') ?></th>
           </tr>
         </thead>
         <tbody>
           <?php foreach ($articles as $art): ?>
+            <?php
+              $gallery_items = !empty($art['gallery']) ? json_decode($art['gallery'], true) : [];
+              $has_gallery = !empty($gallery_items) && is_array($gallery_items) && count($gallery_items) > 0;
+              $is_future = strtotime($art['published_at']) > time();
+
+              if ($art['status'] === 'published' && $is_future) {
+                  $status_label = 'Scheduled';
+                  $status_class = 'nc-status-scheduled';
+              } elseif ($art['status'] === 'published') {
+                  $status_label = i18n_r('NewsCenter/PUBLISHED');
+                  $status_class = 'nc-status-published';
+              } else {
+                  $status_label = i18n_r('NewsCenter/DRAFT');
+                  $status_class = 'nc-status-draft';
+              }
+            ?>
             <tr>
               <td>
-                <div class="nc-article-title-row">
-                  <strong>
-                    <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=edit-article&article_id=<?= (int)$art['id'] ?>">
-                      <?= htmlspecialchars($art['title']) ?>
-                    </a>
-                  </strong>
-                  <?php if (!empty($art['featured_image'])): ?>
-                    <span class="nc-badge-thumb" title="<?= i18n_r('NewsCenter/HAS_IMAGE') ?>">&#128247;</span>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=edit-article&article_id=<?= (int)$art['id'] ?>" style="font-weight:600; color:var(--nc-text); text-decoration:none;">
+                    <?= htmlspecialchars($art['title']) ?>
+                  </a>
+                  <?php if ($has_gallery): ?>
+                    <span class="nc-gallery-indicator" title="Gallery contains <?= count($gallery_items) ?> image(s)">📷 <?= count($gallery_items) ?></span>
                   <?php endif; ?>
                 </div>
                 <div class="nc-subtext">/<?= htmlspecialchars($art['slug']) ?></div>
               </td>
               <td>
-                <span class="nc-badge-status nc-status-<?= htmlspecialchars($art['status']) ?>">
-                  <?= htmlspecialchars(ucfirst($art['status'])) ?>
-                </span>
+                <span class="nc-badge-status <?= $status_class ?>"><?= $status_label ?></span>
               </td>
-              <td><?= htmlspecialchars($art['author'] ?: 'admin') ?></td>
-              <td>
-                <time datetime="<?= htmlspecialchars($art['published_at']) ?>">
-                  <?= date('Y-m-d H:i', strtotime($art['published_at'])) ?>
-                </time>
-              </td>
+              <td><?= date($date_format, strtotime($art['published_at'])) ?></td>
               <td class="nc-text-right nc-actions-cell">
                 <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=edit-article&article_id=<?= (int)$art['id'] ?>" class="nc-btn-action" title="<?= i18n_r('NewsCenter/EDIT') ?>">&#9998;</a>
                 <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=articles&do=delete&article_id=<?= (int)$art['id'] ?>&nc_csrf=<?= nc_csrf_token() ?>" 
@@ -109,27 +113,8 @@ $categories = nc_get_categories_with_counts();
           <?php endforeach; ?>
         </tbody>
       </table>
-
-      <?php if ($total_pages > 1): ?>
-        <div class="nc-pagination">
-          <?php
-          $query_params = $_GET;
-          for ($i = 1; $i <= $total_pages; $i++):
-            $query_params['p'] = $i;
-            $page_url = 'load.php?' . http_build_query($query_params);
-          ?>
-            <a href="<?= htmlspecialchars($page_url) ?>" class="nc-page-link <?= ($i === $page) ? 'active' : '' ?>">
-              <?= $i ?>
-            </a>
-          <?php endfor; ?>
-        </div>
-      <?php endif; ?>
-
     <?php else: ?>
-      <div class="nc-empty-state">
-        <p><?= i18n_r('NewsCenter/NO_ARTICLES_FOUND') ?></p>
-        <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=edit-article" class="nc-btn nc-btn-primary">+ <?= i18n_r('NewsCenter/CREATE_FIRST_ARTICLE') ?></a>
-      </div>
+      <p class="nc-empty-state"><?= i18n_r('NewsCenter/NO_ARTICLES_FOUND') ?>.</p>
     <?php endif; ?>
   </div>
 </div>

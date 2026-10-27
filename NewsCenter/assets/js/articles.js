@@ -1,57 +1,251 @@
 /**
- * NewsCenter - Article Editor & Media Browser Bridge
- * Vanilla ES6 - No jQuery dependency.
+ * NewsCenter - Article Editor, Sortable Gallery & Featured Thumbnail
+ * Vanilla ES6 - Self-contained
  */
 
 document.addEventListener('DOMContentLoaded', () => {
     const rawContentEl = document.getElementById('nc-article-content');
     const form = document.getElementById('nc-article-form');
-    const previewContainer = document.getElementById('nc-media-selection-preview');
-    let editor = null;
-    let savedSelectionRange = null;
+    const galleryDataInput = document.getElementById('nc-gallery-data');
+    const galleryCardsContainer = document.getElementById('nc-gallery-cards');
 
-    // 1. Initialize Autumnnote
+    // 1. Initialize Autumnnote WYSIWYG
+    let editor = null;
     const AN = window.AutumnNote || window.autumnnote;
     if (AN && rawContentEl) {
-        editor = AN.create(rawContentEl, {
-            placeholder: 'Write your article content here...',
-            minHeight: 380,
-            resizable: true
+        try {
+            editor = AN.create(rawContentEl, {
+                placeholder: 'Write your article content here...',
+                minHeight: 380,
+                resizable: true
+            });
+        } catch (err) {
+            console.error('NewsCenter: editor failed to initialize', err);
+        }
+    }
+
+    // 2. Featured Image Thumbnail Function
+    const featuredInput = document.getElementById('nc-featured-image-input');
+    const featuredThumbWrap = document.getElementById('nc-featured-thumb-wrap');
+    const featuredThumbImg = document.getElementById('nc-featured-thumb-img');
+    const featuredPlaceholder = document.getElementById('nc-featured-placeholder');
+    const featuredRemoveBtn = document.getElementById('nc-featured-remove-btn');
+    const selectFeaturedBtn = document.getElementById('nc-select-featured-btn');
+
+    window.ncSetFeaturedThumb = function(url, thumbUrl) {
+        const cleanUrl = (url || '').trim();
+        const displaySrc = (thumbUrl || cleanUrl || '').trim();
+
+        if (cleanUrl !== '') {
+            featuredInput.value = cleanUrl;
+            featuredThumbImg.src = displaySrc;
+            featuredThumbImg.style.display = 'block';
+            if (featuredPlaceholder) featuredPlaceholder.style.display = 'none';
+            if (featuredRemoveBtn) featuredRemoveBtn.style.display = 'block';
+            if (selectFeaturedBtn) selectFeaturedBtn.textContent = 'Change Image';
+        } else {
+            featuredInput.value = '';
+            featuredThumbImg.src = '';
+            featuredThumbImg.style.display = 'none';
+            if (featuredPlaceholder) featuredPlaceholder.style.display = 'flex';
+            if (featuredRemoveBtn) featuredRemoveBtn.style.display = 'none';
+            if (selectFeaturedBtn) selectFeaturedBtn.textContent = 'Choose Image';
+        }
+    };
+
+    if (featuredRemoveBtn) {
+        featuredRemoveBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            window.ncSetFeaturedThumb('');
         });
     }
 
-    // Helper to preserve editor selection when opening modals
-    function saveEditorSelection() {
-        const sel = window.getSelection();
-        if (sel && sel.rangeCount > 0) {
-            savedSelectionRange = sel.getRangeAt(0).cloneRange();
+    // 3. Load & Render Sortable Gallery
+    let galleryItems = [];
+    if (galleryDataInput && galleryDataInput.value) {
+        try {
+            galleryItems = JSON.parse(galleryDataInput.value) || [];
+        } catch (e) {
+            galleryItems = [];
         }
     }
 
-    function restoreEditorSelection() {
-        const editable = document.querySelector('.an-editable') || rawContentEl;
-        if (editable) {
-            editable.focus();
+    function syncGalleryInput() {
+        if (galleryDataInput) {
+            galleryDataInput.value = JSON.stringify(galleryItems);
         }
-        if (savedSelectionRange) {
-            const sel = window.getSelection();
-            if (sel) {
-                sel.removeAllRanges();
-                sel.addRange(savedSelectionRange);
+    }
+
+    function renderGalleryCards() {
+        if (!galleryCardsContainer) return;
+        galleryCardsContainer.innerHTML = '';
+
+        if (galleryItems.length === 0) {
+            galleryCardsContainer.style.display = 'none';
+            return;
+        }
+
+        galleryCardsContainer.style.display = 'grid';
+
+        galleryItems.forEach((item, index) => {
+            const card = document.createElement('div');
+            card.className = 'nc-gallery-card';
+            card.dataset.index = String(index);
+            card._ncItem = item;
+
+            card.innerHTML = `
+              <div class="nc-gallery-card-thumb">
+                <img src="${item.thumb || item.url}" alt="${item.name || ''}" draggable="false">
+                <span class="nc-drag-badge" title="Drag to reorder">&#9776;</span>
+                <button type="button" class="nc-gallery-card-close" title="Remove image">&times;</button>
+              </div>
+              <input type="text" class="nc-gallery-card-caption" placeholder="Caption (optional)" value="${item.caption ? String(item.caption).replace(/"/g, '&quot;') : ''}">
+            `;
+
+            // Delete action
+            const closeBtn = card.querySelector('.nc-gallery-card-close');
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const pos = galleryItems.indexOf(item);
+                if (pos > -1) galleryItems.splice(pos, 1);
+                syncGalleryInput();
+                renderGalleryCards();
+            });
+
+            // Caption action
+            const captionInput = card.querySelector('.nc-gallery-card-caption');
+            captionInput.addEventListener('input', () => {
+                item.caption = captionInput.value;
+                syncGalleryInput();
+            });
+
+            galleryCardsContainer.appendChild(card);
+        });
+
+        syncGalleryInput();
+    }
+
+    renderGalleryCards();
+
+    // Gallery drag-sorting using PointerEvents
+    function initGallerySort() {
+        if (!galleryCardsContainer) return;
+        const DRAG_THRESHOLD = 5;
+        let drag = null;
+
+        galleryCardsContainer.addEventListener('pointerdown', (e) => {
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+            if (e.target.closest('input, textarea, button')) return;
+            const card = e.target.closest('.nc-gallery-card');
+            if (!card) return;
+            drag = { card, startX: e.clientX, startY: e.clientY, active: false, ghost: null, offX: 0, offY: 0 };
+        });
+
+        function startDrag(e) {
+            const rect = drag.card.getBoundingClientRect();
+            drag.offX = drag.startX - rect.left;
+            drag.offY = drag.startY - rect.top;
+
+            const ghost = drag.card.cloneNode(true);
+            const srcInput = drag.card.querySelector('input');
+            const ghostInput = ghost.querySelector('input');
+            if (srcInput && ghostInput) ghostInput.value = srcInput.value;
+            ghost.classList.add('nc-gallery-ghost');
+            ghost.style.width = rect.width + 'px';
+            ghost.style.height = rect.height + 'px';
+            ghost.style.left = (e.clientX - drag.offX) + 'px';
+            ghost.style.top = (e.clientY - drag.offY) + 'px';
+            document.body.appendChild(ghost);
+
+            drag.ghost = ghost;
+            drag.original = Array.from(galleryCardsContainer.children);
+            drag.active = true;
+            drag.card.classList.add('nc-dragging');
+            document.body.classList.add('nc-sorting');
+        }
+
+        function moveGhost(e) {
+            if (drag.ghost) {
+                drag.ghost.style.left = (e.clientX - drag.offX) + 'px';
+                drag.ghost.style.top = (e.clientY - drag.offY) + 'px';
             }
         }
+
+        function cardAtPoint(x, y) {
+            const cards = Array.from(galleryCardsContainer.children);
+            for (const c of cards) {
+                const r = c.getBoundingClientRect();
+                if (x >= r.left && x <= r.left + r.width && y >= r.top && y <= r.top + r.height) return c;
+            }
+            return null;
+        }
+
+        function reorderLive(e) {
+            const target = cardAtPoint(e.clientX, e.clientY);
+            if (!target || target === drag.card) return;
+
+            const cards = Array.from(galleryCardsContainer.children);
+            if (cards.indexOf(drag.card) < cards.indexOf(target)) {
+                galleryCardsContainer.insertBefore(drag.card, target.nextSibling);
+            } else {
+                galleryCardsContainer.insertBefore(drag.card, target);
+            }
+        }
+
+        document.addEventListener('pointermove', (e) => {
+            if (!drag) return;
+            if (!drag.active) {
+                if (Math.hypot(e.clientX - drag.startX, e.clientY - drag.startY) < DRAG_THRESHOLD) return;
+                startDrag(e);
+            }
+            e.preventDefault();
+            moveGhost(e);
+            reorderLive(e);
+        });
+
+        function endDrag(commit) {
+            if (!drag) return;
+            const d = drag;
+            drag = null;
+            if (!d.active) return;
+
+            if (d.ghost) d.ghost.remove();
+            d.card.classList.remove('nc-dragging');
+            document.body.classList.remove('nc-sorting');
+
+            if (commit) {
+                const cards = Array.from(galleryCardsContainer.children);
+                const reordered = cards.map(c => c._ncItem);
+                if (reordered.length === galleryItems.length && reordered.every(Boolean)) {
+                    galleryItems = reordered;
+                    cards.forEach((c, i) => { c.dataset.index = String(i); });
+                    syncGalleryInput();
+                } else {
+                    d.original.forEach(c => galleryCardsContainer.appendChild(c));
+                }
+            } else {
+                d.original.forEach(c => galleryCardsContainer.appendChild(c));
+            }
+        }
+
+        document.addEventListener('pointerup', () => endDrag(true));
+        document.addEventListener('pointercancel', () => endDrag(false));
     }
 
-    // 2. Synchronize content before form submission
-    if (form && editor) {
+    initGallerySort();
+
+    // 4. Form Submit Sync
+    if (form) {
         form.addEventListener('submit', () => {
-            if (typeof editor.getHTML === 'function') {
+            if (editor && typeof editor.getHTML === 'function') {
                 rawContentEl.value = editor.getHTML();
             }
+            syncGalleryInput();
         });
     }
 
-    // 3. Automated slug generation from title
+    // 5. Title-to-Slug Generator
     const titleInput = document.getElementById('nc-title-input');
     const slugInput = document.getElementById('nc-slug-input');
     if (titleInput && slugInput && !slugInput.value) {
@@ -70,83 +264,59 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 4. Media Browser Modal Controller
+    // 6. Sticky Status Sync (With Scheduled Detection)
+    const statusSelect = document.getElementById('nc-status-select');
+    const pubDateInput = document.getElementById('nc-published-at-input');
+    const stickyStatusText = document.getElementById('nc-bar-status-text');
+
+    function refreshStickyStatus() {
+        if (!statusSelect || !stickyStatusText) return;
+        const currentVal = statusSelect.value;
+
+        if (currentVal === 'published') {
+            const pubTime = pubDateInput && pubDateInput.value ? new Date(pubDateInput.value).getTime() : 0;
+            const nowTime = Date.now();
+            if (pubTime > nowTime) {
+                stickyStatusText.textContent = 'Status: Scheduled';
+                return;
+            }
+            stickyStatusText.textContent = 'Status: Published';
+        } else {
+            stickyStatusText.textContent = 'Status: Draft';
+        }
+    }
+
+    if (statusSelect) statusSelect.addEventListener('change', refreshStickyStatus);
+    if (pubDateInput) pubDateInput.addEventListener('input', refreshStickyStatus);
+    refreshStickyStatus();
+
+    // 7. Media Picker & Modal Engine
     const modal = document.getElementById('nc-media-modal');
-    const openBtn = document.getElementById('nc-open-media-modal');
-    const closeBtns = document.querySelectorAll('.nc-modal-close, .nc-modal-close-btn');
+    const openGalleryBtn = document.getElementById('nc-open-media-modal');
+    const closeBtns = document.querySelectorAll('.nc-modal-close, .nc-modal-close-btn, #nc-modal-x-close');
     const fileListContainer = document.getElementById('nc-modal-file-list');
     const insertBtn = document.getElementById('nc-insert-gallery-btn');
     const selectionInfo = document.getElementById('nc-selection-info');
     const searchInput = document.getElementById('nc-media-search');
 
-    // Tabs
     const tabBrowse = document.querySelector('.nc-modal-tab[data-tab="browse"]');
     const tabUpload = document.querySelector('.nc-modal-tab[data-tab="upload"]');
     const paneBrowse = document.getElementById('nc-pane-browse');
     const paneUpload = document.getElementById('nc-pane-upload');
 
-    // Upload elements
-    const dropzone = document.getElementById('nc-dropzone');
-    const fileInput = document.getElementById('nc-file-input');
-    const uploadStatus = document.getElementById('nc-upload-status');
-
     let allMediaFiles = [];
-    const selectedImages = new Map(); // url => file object
-    const insertedGalleryImages = []; // Array of images displayed in panel preview
-    let pickerMode = 'gallery'; // 'gallery' or 'featured'
+    const selectedImages = new Map();
+    let currentMode = 'gallery'; // 'gallery' | 'featured'
 
     function updateSelectionUI() {
         const count = selectedImages.size;
         if (insertBtn) {
             insertBtn.disabled = (count === 0);
-            insertBtn.textContent = count > 1 ? `Insert Gallery (${count})` : (count === 1 ? 'Insert Image' : 'Insert Selected');
+            insertBtn.textContent = count > 1 ? `Add to Gallery (${count})` : 'Add to Gallery';
         }
         if (selectionInfo) {
             selectionInfo.textContent = count === 1 ? '1 image selected' : `${count} images selected`;
         }
-    }
-
-    function renderInsertedGalleryPreview() {
-        if (!previewContainer) return;
-        previewContainer.innerHTML = '';
-
-        if (insertedGalleryImages.length === 0) {
-            previewContainer.style.display = 'none';
-            return;
-        }
-
-        previewContainer.style.display = 'grid';
-
-        insertedGalleryImages.forEach((img, idx) => {
-            const card = document.createElement('div');
-            card.className = 'nc-preview-card';
-
-            const imageEl = document.createElement('img');
-            imageEl.src = img.thumb || img.url;
-            imageEl.alt = img.name;
-
-            const nameEl = document.createElement('span');
-            nameEl.className = 'nc-preview-card-name';
-            nameEl.textContent = img.name;
-            nameEl.title = img.name;
-
-            const removeBtn = document.createElement('button');
-            removeBtn.type = 'button';
-            removeBtn.className = 'nc-preview-card-remove';
-            removeBtn.innerHTML = '&times;';
-            removeBtn.title = 'Remove from preview';
-
-            removeBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                insertedGalleryImages.splice(idx, 1);
-                renderInsertedGalleryPreview();
-            });
-
-            card.appendChild(imageEl);
-            card.appendChild(nameEl);
-            card.appendChild(removeBtn);
-            previewContainer.appendChild(card);
-        });
     }
 
     function setTab(name) {
@@ -168,242 +338,159 @@ document.addEventListener('DOMContentLoaded', () => {
         tabUpload.addEventListener('click', () => setTab('upload'));
     }
 
-    // Modal open/close
-    if (openBtn && modal) {
-        openBtn.addEventListener('click', () => {
-            saveEditorSelection();
-            pickerMode = 'gallery';
+    if (openGalleryBtn) {
+        openGalleryBtn.addEventListener('click', () => {
+            currentMode = 'gallery';
+            selectedImages.clear();
+            updateSelectionUI();
             modal.style.display = 'block';
             setTab('browse');
-            fetchMediaFiles();
-        });
-
-        closeBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                modal.style.display = 'none';
-            });
-        });
-
-        window.addEventListener('click', (e) => {
-            if (e.target === modal) modal.style.display = 'none';
+            loadMedia();
         });
     }
 
-    function renderMediaGrid(filesToRender) {
-        fileListContainer.innerHTML = '';
+    if (selectFeaturedBtn) {
+        selectFeaturedBtn.addEventListener('click', () => {
+            currentMode = 'featured';
+            selectedImages.clear();
+            updateSelectionUI();
+            modal.style.display = 'block';
+            setTab('browse');
+            loadMedia();
+        });
+    }
 
-        if (!filesToRender || filesToRender.length === 0) {
-            fileListContainer.innerHTML = '<p class="nc-empty-state">No images found. Click the "Upload Images" tab to add files.</p>';
+    closeBtns.forEach(btn => {
+        btn.addEventListener('click', () => { modal.style.display = 'none'; });
+    });
+
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) modal.style.display = 'none';
+    });
+
+    function renderGrid(files) {
+        fileListContainer.innerHTML = '';
+        if (!files || files.length === 0) {
+            fileListContainer.innerHTML = '<p style="text-align:center; padding:30px; color:#64748b;">No images found in uploads.</p>';
             return;
         }
 
         const grid = document.createElement('div');
         grid.className = 'nc-media-grid';
 
-        filesToRender.forEach(file => {
-            const item = document.createElement('div');
-            item.className = 'nc-media-thumb';
+        files.forEach(file => {
+            const card = document.createElement('div');
+            card.className = 'nc-media-thumb';
             if (selectedImages.has(file.url)) {
-                item.classList.add('selected');
+                card.classList.add('selected');
             }
 
-            const img = document.createElement('img');
-            img.src = file.thumb || file.url;
-            img.alt = file.name;
-            img.loading = 'lazy';
-            img.onerror = () => { img.src = file.url; };
+            card.innerHTML = `
+              <img src="${file.thumb || file.url}" alt="${file.name}" loading="lazy">
+              <p title="${file.name}">${file.name}</p>
+            `;
 
-            const p = document.createElement('p');
-            p.textContent = file.name;
-            p.title = file.path || file.name;
-
-            const tick = document.createElement('span');
-            tick.className = 'nc-media-tick';
-            tick.textContent = '✓';
-
-            item.appendChild(img);
-            item.appendChild(p);
-            item.appendChild(tick);
-
-            item.addEventListener('click', () => {
-                if (pickerMode === 'featured') {
-                    const featuredInput = document.getElementById('nc-featured-image-input');
-                    if (featuredInput) {
-                        featuredInput.value = file.url;
-                    }
+            card.addEventListener('click', () => {
+                if (currentMode === 'featured') {
+                    window.ncSetFeaturedThumb(file.url, file.thumb);
                     modal.style.display = 'none';
                     return;
                 }
 
                 if (selectedImages.has(file.url)) {
                     selectedImages.delete(file.url);
-                    item.classList.remove('selected');
+                    card.classList.remove('selected');
                 } else {
                     selectedImages.set(file.url, file);
-                    item.classList.add('selected');
+                    card.classList.add('selected');
                 }
                 updateSelectionUI();
             });
 
-            grid.appendChild(item);
+            grid.appendChild(card);
         });
 
         fileListContainer.appendChild(grid);
     }
 
-    function fetchMediaFiles() {
-        fileListContainer.innerHTML = '<p>Scanning CMS uploads directory...</p>';
-
+    function loadMedia() {
+        fileListContainer.innerHTML = '<p style="text-align:center; padding:30px;">Loading uploads...</p>';
         fetch('load.php?id=NewsCenter&action=ajax_media', { credentials: 'same-origin' })
             .then(res => res.json())
             .then(data => {
                 allMediaFiles = data.files || [];
-                renderMediaGrid(allMediaFiles);
-                updateSelectionUI();
+                renderGrid(allMediaFiles);
             })
             .catch(err => {
-                fileListContainer.innerHTML = '<p class="nc-alert-error" style="padding:10px;">Error loading media: ' + err.message + '</p>';
+                fileListContainer.innerHTML = '<p style="color:red; padding:20px;">Failed to load images: ' + err.message + '</p>';
             });
     }
 
-    // Search filter
     if (searchInput) {
         searchInput.addEventListener('input', () => {
             const q = searchInput.value.trim().toLowerCase();
             if (!q) {
-                renderMediaGrid(allMediaFiles);
+                renderGrid(allMediaFiles);
                 return;
             }
-            const filtered = allMediaFiles.filter(f => f.name.toLowerCase().includes(q) || (f.path && f.path.toLowerCase().includes(q)));
-            renderMediaGrid(filtered);
+            const filtered = allMediaFiles.filter(f => f.name.toLowerCase().includes(q));
+            renderGrid(filtered);
         });
     }
 
-    // Upload Handling
-    function uploadFiles(files) {
-        if (!files || files.length === 0) return;
-
-        uploadStatus.innerHTML = '<p>Uploading ' + files.length + ' file(s)...</p>';
-        const fd = new FormData();
-        const csrfToken = modal.getAttribute('data-csrf') || '';
-        fd.append('nc_csrf', csrfToken);
-
-        for (let i = 0; i < files.length; i++) {
-            fd.append('file[]', files[i]);
-        }
-
-        fetch('load.php?id=NewsCenter&action=ajax_upload', {
-            method: 'POST',
-            body: fd,
-            credentials: 'same-origin'
-        })
-        .then(res => res.json())
-        .then(d => {
-            if (d.ok) {
-                uploadStatus.innerHTML = '<p class="nc-alert-success" style="padding:8px;">✓ Upload complete!</p>';
-                if (d.files) {
-                    d.files.forEach(f => {
-                        allMediaFiles.unshift(f);
-                        selectedImages.set(f.url, f);
-                    });
-                }
-                setTimeout(() => {
-                    uploadStatus.innerHTML = '';
-                    setTab('browse');
-                    renderMediaGrid(allMediaFiles);
-                    updateSelectionUI();
-                }, 800);
-            } else {
-                uploadStatus.innerHTML = '<p class="nc-alert-error" style="padding:8px;">✕ ' + (d.error || (d.errors ? d.errors.join('<br>') : 'Upload failed')) + '</p>';
-            }
-        })
-        .catch(err => {
-            uploadStatus.innerHTML = '<p class="nc-alert-error" style="padding:8px;">✕ Upload error: ' + err.message + '</p>';
-        });
-    }
+    // Direct Upload Handler
+    const dropzone = document.getElementById('nc-dropzone');
+    const fileInput = document.getElementById('nc-file-input');
+    const uploadStatus = document.getElementById('nc-upload-status');
 
     if (dropzone && fileInput) {
         dropzone.addEventListener('click', () => fileInput.click());
         fileInput.addEventListener('change', () => {
-            uploadFiles(fileInput.files);
-            fileInput.value = '';
-        });
+            if (fileInput.files.length > 0) {
+                const fd = new FormData();
+                fd.append('nc_csrf', modal.getAttribute('data-csrf') || '');
+                for (let i = 0; i < fileInput.files.length; i++) {
+                    fd.append('file[]', fileInput.files[i]);
+                }
 
-        ['dragenter', 'dragover'].forEach(ev => {
-            dropzone.addEventListener(ev, (e) => {
-                e.preventDefault();
-                dropzone.classList.add('dragover');
-            });
-        });
-
-        ['dragleave', 'drop'].forEach(ev => {
-            dropzone.addEventListener(ev, (e) => {
-                e.preventDefault();
-                dropzone.classList.remove('dragover');
-            });
-        });
-
-        dropzone.addEventListener('drop', (e) => {
-            if (e.dataTransfer && e.dataTransfer.files) {
-                uploadFiles(e.dataTransfer.files);
+                uploadStatus.innerHTML = '<p>Uploading...</p>';
+                fetch('load.php?id=NewsCenter&action=ajax_upload', { method: 'POST', body: fd })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.ok && res.files && res.files.length > 0) {
+                            if (currentMode === 'featured') {
+                                window.ncSetFeaturedThumb(res.files[0].url, res.files[0].thumb);
+                                modal.style.display = 'none';
+                            } else {
+                                res.files.forEach(f => selectedImages.set(f.url, f));
+                                setTab('browse');
+                                loadMedia();
+                                updateSelectionUI();
+                            }
+                            uploadStatus.innerHTML = '';
+                        } else {
+                            uploadStatus.innerHTML = '<p style="color:red;">Upload failed.</p>';
+                        }
+                    });
             }
         });
     }
 
-    // Insert Gallery / Images Button
+    // Insert multiple into gallery
     if (insertBtn) {
         insertBtn.addEventListener('click', () => {
-            if (selectedImages.size === 0) return;
-
-            let insertHtml = '';
-            const chosenList = Array.from(selectedImages.values());
-
-            // Add to the visual thumbnail preview below editor
-            chosenList.forEach(img => {
-                insertedGalleryImages.push(img);
-            });
-            renderInsertedGalleryPreview();
-
-            if (chosenList.length === 1) {
-                const img = chosenList[0];
-                insertHtml = `<p><img src="${img.url}" alt="${img.name}" class="an-image"></p>\n`;
-            } else {
-                insertHtml = '<div class="nc-frontend-gallery">\n';
-                chosenList.forEach((img) => {
-                    insertHtml += `  <figure class="nc-gallery-item"><img src="${img.url}" alt="${img.name}"></figure>\n`;
-                });
-                insertHtml += '</div>\n';
-            }
-
-            // Restore focus and cursor selection back into Autumnnote canvas
-            restoreEditorSelection();
-
-            if (editor && typeof editor.insertHTML === 'function') {
-                editor.insertHTML(insertHtml);
-            } else {
-                const editable = document.querySelector('.an-editable');
-                if (editable) {
-                    editable.focus();
-                    document.execCommand('insertHTML', false, insertHtml);
-                } else if (rawContentEl) {
-                    rawContentEl.value += insertHtml;
+            selectedImages.forEach(file => {
+                if (!galleryItems.some(i => i.url === file.url)) {
+                    galleryItems.push({
+                        url: file.url,
+                        thumb: file.thumb || file.url,
+                        name: file.name,
+                        caption: ''
+                    });
                 }
-            }
-
-            selectedImages.clear();
-            updateSelectionUI();
+            });
+            renderGalleryCards();
             modal.style.display = 'none';
-        });
-    }
-
-    // 5. Featured Image Picker
-    const selectFeaturedBtn = document.getElementById('nc-select-featured-btn');
-    if (selectFeaturedBtn && modal) {
-        selectFeaturedBtn.addEventListener('click', () => {
-            pickerMode = 'featured';
-            modal.style.display = 'block';
-            setTab('browse');
-            fetchMediaFiles();
         });
     }
 });
