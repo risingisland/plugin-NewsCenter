@@ -58,6 +58,7 @@ function nc_init_database() {
         name TEXT NOT NULL,
         slug TEXT NOT NULL UNIQUE,
         description TEXT,
+        image TEXT,
         sort_order INTEGER DEFAULT 0
     );
 
@@ -88,6 +89,7 @@ function nc_init_database() {
         name TEXT NOT NULL,
         slug TEXT NOT NULL UNIQUE,
         bio TEXT,
+        image TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -109,23 +111,32 @@ function nc_init_database() {
 
     $db->exec($schema);
 
-    // 2. Ensure schema migration columns exist
-    $columns = $db->query("PRAGMA table_info(nc_articles)")->fetchAll();
-    $existing = array_column($columns, 'name');
-    if (!in_array('gallery', $existing, true)) {
+    // Schema Migrations
+    $art_cols = array_column($db->query("PRAGMA table_info(nc_articles)")->fetchAll(), 'name');
+    if (!in_array('gallery', $art_cols, true)) {
         $db->exec("ALTER TABLE nc_articles ADD COLUMN gallery TEXT;");
     }
 
-    // 3. Seed default author if empty
+    $cat_cols = array_column($db->query("PRAGMA table_info(nc_categories)")->fetchAll(), 'name');
+    if (!in_array('image', $cat_cols, true)) {
+        $db->exec("ALTER TABLE nc_categories ADD COLUMN image TEXT;");
+    }
+
+    $author_cols = array_column($db->query("PRAGMA table_info(nc_authors)")->fetchAll(), 'name');
+    if (!in_array('image', $author_cols, true)) {
+        $db->exec("ALTER TABLE nc_authors ADD COLUMN image TEXT;");
+    }
+
+    // Default Author Seeding
     $authorCount = (int)$db->query("SELECT COUNT(*) FROM nc_authors")->fetchColumn();
     if ($authorCount === 0) {
         $defaultName = defined('USR') && USR ? USR : 'Admin';
         $defaultSlug = strtolower(preg_replace('/[^a-z0-9-_]/', '', $defaultName));
-        $stmt = $db->prepare("INSERT INTO nc_authors (name, slug, bio) VALUES (?, ?, ?)");
-        $stmt->execute([$defaultName, $defaultSlug ?: 'admin', 'Default site author.']);
+        $stmt = $db->prepare("INSERT INTO nc_authors (name, slug, bio, image) VALUES (?, ?, ?, ?)");
+        $stmt->execute([$defaultName, $defaultSlug ?: 'admin', 'Default site author.', '']);
     }
 
-    // 4. Seed settings if empty
+    // Default Settings Seeding
     $settingCount = (int)$db->query("SELECT COUNT(*) FROM nc_settings")->fetchColumn();
     if ($settingCount === 0) {
         $stmt = $db->prepare("INSERT INTO nc_settings (setting_key, setting_value) VALUES (?, ?)");

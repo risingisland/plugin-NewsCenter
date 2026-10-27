@@ -19,7 +19,7 @@ if (!empty($_GET['action'])) {
 <div class="nc-wrap">
   <div class="nc-main-header">
     <div class="nc-brand">
-      <h1>NewsCenter <span class="nc-badge">v<?= NC_VERSION ?></span></h1>
+      <h1><?= i18n_r('NewsCenter/ADMIN_TITLE') ?> <span class="nc-badge">v<?= NC_VERSION ?></span></h1>
     </div>
     <div class="nc-quick-status">
       <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=edit-article" class="nc-btn nc-btn-primary">+ <?= i18n_r('NewsCenter/NEW_ARTICLE') ?></a>

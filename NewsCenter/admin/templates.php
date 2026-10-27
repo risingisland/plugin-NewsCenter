@@ -74,7 +74,7 @@ $is_css = ($active_key === 'frontend_css');
       </div>
 
       <div class="nc-actions-bar" style="margin-top:15px;">
-        <button type="submit" class="nc-btn nc-btn-primary">&#128190; Save Template</button>
+        <button type="submit" class="nc-btn nc-btn-primary nc-btn-save">&#128190; Save Template</button>
       </div>
     </form>
   </div>

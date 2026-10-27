@@ -95,7 +95,7 @@ if ($page_files) {
       </div>
 
       <div class="nc-actions-bar" style="margin-top:20px;">
-        <button type="submit" class="nc-btn nc-btn-primary">&#128190; Save Settings</button>
+        <button type="submit" class="nc-btn nc-btn-primary nc-btn-save">&#128190; Save Settings</button>
       </div>
     </form>
   </div>

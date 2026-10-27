@@ -62,7 +62,7 @@ if ($article['status'] === 'published' && $is_future) {
 <div class="nc-container nc-edit-article-wrapper">
   <div class="nc-page-header">
     <h2><?= ($id > 0) ? i18n_r('NewsCenter/EDIT_ARTICLE') : i18n_r('NewsCenter/ADD_ARTICLE') ?></h2>
-    <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=articles" class="nc-btn nc-btn-secondary">&larr; <?= i18n_r('NewsCenter/BACK_TO_ARTICLES') ?></a>
+    <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=articles" class="nc-btn nc-btn-secondary" style="margin-bottom:20px;">&larr; <?= i18n_r('NewsCenter/BACK_TO_ARTICLES') ?></a>
   </div>
 
   <form id="nc-article-form" action="load.php?id=<?= NC_PLUGIN_ID ?>&action=save_article" method="POST">
@@ -74,6 +74,9 @@ if ($article['status'] === 'published' && $is_future) {
     <div class="nc-row-grid nc-row-top">
       <!-- Col 1: Title & Slug -->
       <div class="nc-card nc-col-title-slug">
+        <div class="nc-card-header">
+          <h3><?= i18n_r('NewsCenter/ARTICLE') ?></h3>
+        </div>
         <div class="nc-form-group">
           <label for="nc-title-input"><?= i18n_r('NewsCenter/TITLE') ?></label>
           <input type="text" id="nc-title-input" name="title" value="<?= htmlspecialchars($article['title']) ?>" class="nc-input" required placeholder="Enter article title...">
@@ -121,8 +124,6 @@ if ($article['status'] === 'published' && $is_future) {
           <label><?= i18n_r('NewsCenter/PUB_DATE') ?></label>
           <input type="datetime-local" id="nc-published-at-input" name="published_at" value="<?= date('Y-m-d\TH:i', strtotime($article['published_at'])) ?>" class="nc-input">
         </div>
-
-        <button type="submit" class="nc-btn nc-btn-primary nc-btn-block"><?= i18n_r('NewsCenter/SAVE_ARTICLE') ?></button>
       </div>
     </div>
 
@@ -233,7 +234,7 @@ if ($article['status'] === 'published' && $is_future) {
     <!-- Floating Sticky Bottom Bar for Save Button -->
     <div class="nc-sticky-save-bar" id="nc-sticky-bar">
       <span class="nc-status-indicator" id="nc-bar-status-text">Status: <?= $current_status_label ?></span>
-      <button type="submit" class="nc-btn nc-btn-primary" style="padding:10px 24px; font-size:14px;">&#128190; <?= i18n_r('NewsCenter/SAVE_ARTICLE') ?></button>
+      <button type="submit" class="nc-btn nc-btn-primary nc-btn-save" style="padding:10px 24px; font-size:14px;">&#128190; <?= i18n_r('NewsCenter/SAVE_ARTICLE') ?></button>
     </div>
   </form>
 </div>

@@ -2,7 +2,7 @@
 $i18n = [
     'PLUGIN_DESC'              => 'Modern news & article management plugin with SQLite, Autumnnote, and CodeMirror.',
     'NAV_TITLE'                => 'News',
-    'ADMIN_TITLE'              => 'NewsCenter',
+    'ADMIN_TITLE'              => 'News Center',
     'ACCESS_DENIED'            => 'Access denied: You do not have sufficient permissions.',
     'TAB_DASHBOARD'            => 'Dashboard',
     'TAB_ARTICLES'             => 'Articles',
@@ -17,6 +17,7 @@ $i18n = [
     'BACK_TO_ARTICLES'         => 'Back to Articles',
     'TITLE'                    => 'Title',
     'SLUG'                     => 'URL Slug',
+    'ARTICLE'                  => 'Article',
     'CONTENT'                  => 'Article Content',
     'MEDIA_BROWSER'            => 'Media Browser & Gallery Inserter',
     'SELECT_IMAGES'            => 'Browse Uploads',

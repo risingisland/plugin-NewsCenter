@@ -396,9 +396,10 @@ function nc_handle_post_actions($action) {
         $name = trim($_POST['name'] ?? '');
         $slug = nc_sanitize_slug($_POST['slug'] ?? $name);
         $desc = trim($_POST['description'] ?? '');
+        $image = trim($_POST['image'] ?? '');
 
         if (!empty($name) && !empty($slug)) {
-            nc_save_category($name, $slug, $desc, $id);
+            nc_save_category($name, $slug, $desc, $image, $id);
             redirect('load.php?id=' . NC_PLUGIN_ID . '&action=categories&status=saved');
         } else {
             redirect('load.php?id=' . NC_PLUGIN_ID . '&action=categories&status=error');
@@ -430,9 +431,10 @@ function nc_handle_post_actions($action) {
         $name = trim($_POST['name'] ?? '');
         $slug = nc_sanitize_slug($_POST['slug'] ?? $name);
         $bio = trim($_POST['bio'] ?? '');
+        $image = trim($_POST['image'] ?? '');
 
         if (!empty($name) && !empty($slug)) {
-            nc_save_author($name, $slug, $bio, $id);
+            nc_save_author($name, $slug, $bio, $image, $id);
             redirect('load.php?id=' . NC_PLUGIN_ID . '&action=authors&status=saved');
         } else {
             redirect('load.php?id=' . NC_PLUGIN_ID . '&action=authors&status=error');

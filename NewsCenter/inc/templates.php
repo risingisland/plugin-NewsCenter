@@ -15,7 +15,7 @@ if (!function_exists('nc_reset_default_templates')) {
     <h1 class="nc-title">{{article.title}}</h1>
     <div class="nc-meta">
       <time datetime="{{article.date_raw}}">{{article.date}}</time>
-      <span class="nc-author">By <a href="{{article.author_url}}">{{article.author}}</a></span>
+      <span class="nc-author">By <span class="nc-authors">{{article.authors}}</span></span>
       <span class="nc-categories">{{article.categories}}</span>
     </div>
   </header>
@@ -45,7 +45,7 @@ if (!function_exists('nc_reset_default_templates')) {
     <h2 class="nc-card-title"><a href="{{article.url}}">{{article.title}}</a></h2>
     <div class="nc-meta">
       <time>{{article.date}}</time>
-      <span class="nc-author">By <a href="{{article.author_url}}">{{article.author}}</a></span>
+      <span class="nc-author">By <span class="nc-authors">{{article.authors}}</span></span>
     </div>
     <div class="nc-excerpt">{{article.excerpt}}</div>
     <a class="nc-read-more" href="{{article.url}}">Read More &rarr;</a>
@@ -75,7 +75,7 @@ if (!function_exists('nc_reset_default_templates')) {
   <div class="nc-home-card-content">
     <div class="nc-home-card-meta">
       <span class="nc-home-card-date">{{article.date}}</span>
-      <span class="nc-home-card-author">By <a href="{{article.author_url}}">{{article.author}}</a></span>
+      <span class="nc-home-card-author">By <span class="nc-authors">{{article.authors}}</span></span>
     </div>
     <h3 class="nc-home-card-title"><a href="{{article.url}}">{{article.title}}</a></h3>
     <p class="nc-home-card-excerpt">{{article.excerpt}}</p>
@@ -97,6 +97,11 @@ if (!function_exists('nc_reset_default_templates')) {
             'author_item' => [
                 'title'   => 'Author Profile Card Item',
                 'content' => '<article class="nc-author-card">
+  {{if:author.has_image}}
+  <div class="nc-author-avatar-wrap">
+    <a href="{{author.url}}"><img src="{{author.image}}" alt="{{author.name}}" class="nc-author-avatar"></a>
+  </div>
+  {{/if:author.has_image}}
   <div class="nc-author-card-body">
     <h3 class="nc-author-name"><a href="{{author.url}}">{{author.name}}</a></h3>
     <span class="nc-author-count">{{author.count}} Articles</span>
@@ -121,6 +126,11 @@ if (!function_exists('nc_reset_default_templates')) {
             'category_item' => [
                 'title'   => 'Category Card Item',
                 'content' => '<article class="nc-category-card">
+  {{if:category.has_image}}
+  <div class="nc-category-img-wrap">
+    <a href="{{category.url}}"><img src="{{category.image}}" alt="{{category.name}}" class="nc-category-thumb"></a>
+  </div>
+  {{/if:category.has_image}}
   <div class="nc-category-card-body">
     <h3 class="nc-category-title"><a href="{{category.url}}">{{category.name}}</a></h3>
     <span class="nc-category-count">{{category.count}} Articles</span>
@@ -133,431 +143,44 @@ if (!function_exists('nc_reset_default_templates')) {
             ],
             'frontend_css' => [
                 'title'   => 'Frontend CSS Stylesheet',
-                'content' => '/* ==========================================================================
-   NewsCenter Frontend Core Styles
-   ========================================================================== */
+                'content' => '/* NewsCenter Frontend Core Styles */
+.nc-news-feed { display: flex; flex-direction: column; gap: 24px; margin: 20px 0; }
+.nc-card { display: flex; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.nc-card-image { flex: 0 0 240px; background: #f1f5f9; }
+.nc-card-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.nc-card-body { padding: 20px; display: flex; flex-direction: column; flex: 1; }
+.nc-card-title { margin: 0 0 8px 0; font-size: 20px; }
+.nc-card-title a { color: #0f172a; text-decoration: none; }
+.nc-meta { font-size: 13px; color: #64748b; margin-bottom: 12px; display: flex; gap: 12px; }
+.nc-meta a { color: #64748b; text-decoration: none; }
+.nc-meta a:hover { color: #2563eb; text-decoration: underline; }
+.nc-authors a { color: inherit; text-decoration: none; font-weight: 500; }
+.nc-authors a:hover { color: #2563eb; text-decoration: underline; }
+.nc-excerpt { font-size: 14px; line-height: 1.6; color: #475569; margin-bottom: 15px; flex-grow: 1; }
+.nc-read-more { font-size: 13px; color: #2563eb; text-decoration: none; font-weight: 600; }
 
-/* Feed & Archive Layout */
-.nc-news-feed {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  margin: 20px 0;
-  font-family: inherit;
-}
+/* Article Single */
+.nc-article-single { margin: 20px 0; }
+.nc-article-single .nc-title { font-size: 32px; margin: 0 0 12px 0; }
+.nc-article-single .nc-featured-image img { max-width: 100%; border-radius: 8px; }
 
-.nc-filter-heading {
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid #e2e8f0;
-}
-.nc-filter-heading h3 {
-  margin: 0;
-  font-size: 20px;
-  color: #1e293b;
-}
+/* Single Gallery Tray */
+.nc-article-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 15px; margin: 30px 0 20px 0; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+.nc-gallery-item { margin: 0; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+.nc-gallery-item img { width: 100%; height: 125px; object-fit: cover; display: block; }
+.nc-gallery-caption { font-size: 12px; color: #4b5563; padding: 6px 10px; text-align: center; background: #f9fafb; }
 
-/* Feed Cards */
-.nc-news-feed .nc-card {
-  display: flex;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.nc-news-feed .nc-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-}
-.nc-card-image {
-  flex: 0 0 240px;
-  background: #f1f5f9;
-}
-.nc-card-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.nc-card-body {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-.nc-card-title {
-  margin: 0 0 8px 0;
-  font-size: 20px;
-  line-height: 1.35;
-}
-.nc-card-title a {
-  color: #0f172a;
-  text-decoration: none;
-}
-.nc-card-title a:hover {
-  color: #2563eb;
-}
-.nc-meta {
-  font-size: 13px;
-  color: #64748b;
-  margin-bottom: 12px;
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.nc-meta a {
-  color: #64748b;
-  text-decoration: none;
-}
-.nc-meta a:hover {
-  color: #2563eb;
-  text-decoration: underline;
-}
-.nc-excerpt {
-  font-size: 14px;
-  line-height: 1.6;
-  color: #475569;
-  margin-bottom: 15px;
-  flex-grow: 1;
-}
-.nc-read-more {
-  font-size: 13px;
-  color: #2563eb;
-  text-decoration: none;
-  font-weight: 600;
-  align-self: flex-start;
-}
-.nc-read-more:hover {
-  text-decoration: underline;
-}
-
-/* Single Article */
-.nc-article-single {
-  margin: 20px 0;
-  font-family: inherit;
-  color: #1e293b;
-  line-height: 1.7;
-}
-.nc-article-single .nc-title {
-  font-size: 32px;
-  line-height: 1.25;
-  margin: 0 0 12px 0;
-  color: #0f172a;
-}
-.nc-article-single .nc-featured-image {
-  margin: 20px 0;
-}
-.nc-article-single .nc-featured-image img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 8px;
-  display: block;
-}
-.nc-article-single .nc-content {
-  font-size: 16px;
-  margin-bottom: 30px;
-}
-.nc-article-single .nc-footer {
-  padding-top: 15px;
-  border-top: 1px solid #e2e8f0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-.nc-tags a {
-  display: inline-block;
-  background: #f1f5f9;
-  color: #475569;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  text-decoration: none;
-  margin-right: 5px;
-}
-.nc-tags a:hover {
-  background: #e2e8f0;
-  color: #0f172a;
-}
-.nc-nav a {
-  color: #2563eb;
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 14px;
-}
-
-/* Single Post Bottom GLightbox Gallery */
-.nc-article-gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-  gap: 15px;
-  margin: 30px 0 20px 0;
-  padding-top: 20px;
-  border-top: 1px solid #e5e7eb;
-}
-.nc-gallery-item {
-  margin: 0;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.nc-gallery-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-.nc-gallery-item a {
-  display: block;
-  position: relative;
-  text-decoration: none;
-}
-.nc-gallery-item img {
-  width: 100%;
-  height: 125px;
-  object-fit: cover;
-  display: block;
-}
-.nc-gallery-caption {
-  font-size: 12px;
-  color: #4b5563;
-  padding: 8px 10px;
-  margin: 0;
-  text-align: center;
-  background: #f9fafb;
-  border-top: 1px solid #f3f4f6;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Home Grid & Shortcode */
-.nc-home-news-section {
-  margin: 30px 0;
-  font-family: inherit;
-  width: 100%;
-  box-sizing: border-box;
-}
-.nc-home-news-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 20px;
-  border-bottom: 2px solid #f1f5f9;
-  padding-bottom: 10px;
-}
-.nc-home-news-title {
-  margin: 0;
-  font-size: 22px;
-  color: #1e293b;
-  font-weight: 700;
-}
-.nc-home-view-all {
-  font-size: 14px;
-  color: #2563eb;
-  text-decoration: none;
-  font-weight: 600;
-}
-.nc-home-view-all:hover {
-  text-decoration: underline;
-}
-.nc-home-news-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 24px;
-}
-.nc-home-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  max-width: 380px;
-  width: 100%;
-  box-sizing: border-box;
-}
-.nc-home-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-}
-.nc-home-card-image img {
-  width: 100%;
-  height: 180px;
-  object-fit: cover;
-  display: block;
-}
-.nc-home-card-content {
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-}
-.nc-home-card-meta {
-  font-size: 12px;
-  color: #64748b;
-  margin-bottom: 6px;
-  font-weight: 500;
-  display: flex;
-  gap: 8px;
-}
-.nc-home-card-author a {
-  color: #64748b;
-  text-decoration: none;
-}
-.nc-home-card-author a:hover {
-  color: #2563eb;
-  text-decoration: underline;
-}
-.nc-home-card-title {
-  margin: 0 0 10px 0;
-  font-size: 18px;
-  line-height: 1.35;
-}
-.nc-home-card-title a {
-  color: #0f172a;
-  text-decoration: none;
-  font-weight: 600;
-}
-.nc-home-card-title a:hover {
-  color: #2563eb;
-}
-.nc-home-card-excerpt {
-  font-size: 13.5px;
-  color: #475569;
-  line-height: 1.5;
-  margin: 0 0 14px 0;
-  flex-grow: 1;
-}
-.nc-home-card-readmore {
-  font-size: 13px;
-  color: #2563eb;
-  text-decoration: none;
-  font-weight: 600;
-  align-self: flex-start;
-}
-.nc-home-card-readmore:hover {
-  text-decoration: underline;
-}
-
-/* ==========================================================================
-   Authors & Categories Directory Cards
-   ========================================================================== */
-.nc-authors-section, .nc-categories-section {
-  margin: 30px 0;
-  font-family: inherit;
-  width: 100%;
-}
-.nc-section-header {
-  margin-bottom: 20px;
-  border-bottom: 2px solid #f1f5f9;
-  padding-bottom: 8px;
-}
-.nc-section-title {
-  margin: 0;
-  font-size: 22px;
-  color: #1e293b;
-  font-weight: 700;
-}
-.nc-authors-grid, .nc-categories-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
-}
-.nc-author-card, .nc-category-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.nc-author-card:hover, .nc-category-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-}
-.nc-author-card-body, .nc-category-card-body {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-.nc-author-name, .nc-category-title {
-  margin: 0 0 6px 0;
-  font-size: 19px;
-}
-.nc-author-name a, .nc-category-title a {
-  color: #0f172a;
-  text-decoration: none;
-  font-weight: 600;
-}
-.nc-author-name a:hover, .nc-category-title a:hover {
-  color: #2563eb;
-}
-.nc-author-count, .nc-category-count {
-  font-size: 12px;
-  color: #64748b;
-  margin-bottom: 12px;
-  font-weight: 500;
-}
-.nc-author-bio, .nc-category-desc {
-  font-size: 13.5px;
-  color: #475569;
-  line-height: 1.5;
-  margin: 0 0 16px 0;
-  flex-grow: 1;
-}
-.nc-author-view-articles, .nc-category-view-link {
-  font-size: 13px;
-  color: #2563eb;
-  text-decoration: none;
-  font-weight: 600;
-  align-self: flex-start;
-}
-.nc-author-view-articles:hover, .nc-category-view-link:hover {
-  text-decoration: underline;
-}
-
-/* Pagination */
-.nc-frontend-pagination {
-  display: flex;
-  gap: 6px;
-  margin-top: 25px;
-}
-.nc-frontend-pagination a {
-  padding: 6px 12px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  color: #1e293b;
-  text-decoration: none;
-  border-radius: 4px;
-  font-size: 13px;
-}
-.nc-frontend-pagination a.active {
-  background: #2563eb;
-  color: #ffffff;
-  border-color: #2563eb;
-}
-
-@media (max-width: 680px) {
-  .nc-news-feed .nc-card {
-    flex-direction: column;
-  }
-  .nc-card-image {
-    flex: none;
-    height: 180px;
-  }
-  .nc-home-card {
-    max-width: 100%;
-  }
-}'
+/* Authors & Categories Cards */
+.nc-authors-grid, .nc-categories-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+.nc-author-card, .nc-category-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; padding: 18px; display: flex; flex-direction: column; }
+.nc-author-avatar-wrap { margin-bottom: 12px; }
+.nc-author-avatar { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; display: block; border: 2px solid #e2e8f0; }
+.nc-category-img-wrap { margin: -18px -18px 14px -18px; }
+.nc-category-thumb { width: 100%; height: 140px; object-fit: cover; display: block; }
+.nc-author-name, .nc-category-title { margin: 0 0 6px 0; font-size: 19px; }
+.nc-author-count, .nc-category-count { font-size: 12px; color: #64748b; margin-bottom: 10px; display: block; }
+.nc-author-bio, .nc-category-desc { font-size: 13.5px; color: #475569; line-height: 1.5; margin: 0 0 14px 0; flex-grow: 1; }
+.nc-author-view-articles, .nc-category-view-link { font-size: 13px; color: #2563eb; text-decoration: none; font-weight: 600; }'
             ]
         ];
 

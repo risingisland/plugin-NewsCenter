@@ -34,7 +34,6 @@ $date_format = !empty($settings['date_format']) ? $settings['date_format'] : 'M 
 <div class="nc-container">
   <div class="nc-page-header">
     <h2><?= i18n_r('NewsCenter/TAB_ARTICLES') ?></h2>
-    <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=edit-article" class="nc-btn nc-btn-primary">+ <?= i18n_r('NewsCenter/NEW_ARTICLE') ?></a>
   </div>
 
   <div class="nc-card">

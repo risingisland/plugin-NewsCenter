@@ -218,7 +218,6 @@ function nc_frontend_handler() {
             $data_index->metad = $clean_desc;
             $metad = $clean_desc;
 
-            // Set exact canonical URL for post
             $post_url = nc_build_url('post', $article['slug']);
             nc_current_canonical($post_url);
 
@@ -299,7 +298,7 @@ function nc_frontend_handler() {
 }
 
 /**
- * Shortcode Filter: supports recent posts, authors directory, and categories directory
+ * Shortcode Filter
  */
 function nc_content_shortcode_filter($content) {
     if (empty($content) || !is_string($content)) {
@@ -314,13 +313,11 @@ function nc_content_shortcode_filter($content) {
         return nc_get_recent_posts_html($limit, $category, 'Latest News', $author);
     }, $content);
 
-    $pattern_authors = '/\[get-newscenter-authors\s*\]/i';
-    $content = preg_replace_callback($pattern_authors, function() {
+    $content = preg_replace_callback('/\[get-newscenter-authors\s*\]/i', function() {
         return nc_get_authors_html();
     }, $content);
 
-    $pattern_categories = '/\[get-newscenter-categories\s*\]/i';
-    $content = preg_replace_callback($pattern_categories, function() {
+    $content = preg_replace_callback('/\[get-newscenter-categories\s*\]/i', function() {
         return nc_get_categories_html();
     }, $content);
 
@@ -373,7 +370,7 @@ function nc_get_article_authors_data($article_id, $default_author_string = 'Admi
     $db = nc_get_db();
 
     $stmt = $db->prepare("
-        SELECT au.name, au.slug 
+        SELECT au.name, au.slug, au.image 
         FROM nc_authors au
         JOIN nc_article_authors aa ON au.id = aa.author_id
         WHERE aa.article_id = ?
@@ -385,6 +382,7 @@ function nc_get_article_authors_data($article_id, $default_author_string = 'Admi
     $names = [];
     $links = [];
     $first_url = nc_build_url();
+    $first_img = '';
 
     if (!empty($authors)) {
         foreach ($authors as $i => $a) {
@@ -392,6 +390,7 @@ function nc_get_article_authors_data($article_id, $default_author_string = 'Admi
             $url = nc_build_url('author', $a['slug']);
             if ($i === 0) {
                 $first_url = $url;
+                $first_img = $a['image'] ?? '';
             }
             $links[] = '<a href="' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '" class="nc-author-link">' . htmlspecialchars($a['name'], ENT_QUOTES, 'UTF-8') . '</a>';
         }
@@ -404,14 +403,15 @@ function nc_get_article_authors_data($article_id, $default_author_string = 'Admi
     }
 
     return [
-        'author_name' => implode(', ', $names),
-        'author_url'  => $first_url,
-        'authors'     => implode(', ', $links)
+        'author_name'  => implode(', ', $names),
+        'author_url'   => $first_url,
+        'authors'      => implode(', ', $links),
+        'author_image' => $first_img
     ];
 }
 
 /**
- * Render single article with GLightbox bottom gallery
+ * Render single article with Local GLightbox bottom gallery[cite: 1]
  */
 function nc_render_single_post($slug) {
     $db = nc_get_db();
@@ -428,7 +428,7 @@ function nc_render_single_post($slug) {
     $news_url = nc_build_url();
 
     $cat_stmt = $db->prepare("
-        SELECT c.name, c.slug FROM nc_categories c
+        SELECT c.name, c.slug, c.image FROM nc_categories c
         JOIN nc_article_categories ac ON c.id = ac.category_id
         WHERE ac.article_id = ?
         ORDER BY c.name ASC
@@ -455,17 +455,18 @@ function nc_render_single_post($slug) {
 
     $author_meta = nc_get_article_authors_data($article['id'], $article['author']);
 
+    // Local GLightbox Gallery Markup (No CDN dependencies)[cite: 1]
     $gallery_html = '';
     $gallery_items = !empty($article['gallery']) ? json_decode($article['gallery'], true) : [];
 
     if (!empty($gallery_items) && is_array($gallery_items)) {
-        $gallery_html .= "\n" . '<!-- NewsCenter GLightbox Gallery -->' . "\n";
-        $gallery_html .= '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css">' . "\n";
+        $gallery_html .= "\n" . '<!-- NewsCenter Local GLightbox -->' . "\n";
+        $gallery_html .= '<link rel="stylesheet" href="' . NC_URL . 'assets/vendor/glightbox/glightbox.min.css">' . "\n";
         $gallery_html .= '<div class="nc-article-gallery">' . "\n";
         foreach ($gallery_items as $item) {
             $img_url  = htmlspecialchars($item['url'], ENT_QUOTES, 'UTF-8');
             $thumb    = htmlspecialchars(!empty($item['thumb']) ? $item['thumb'] : $item['url'], ENT_QUOTES, 'UTF-8');
-            $caption  = !empty($item['caption']) ? htmlspecialchars($item['caption']) : '';
+            $caption  = !empty($item['caption']) ? htmlspecialchars($item['caption'], ENT_QUOTES, 'UTF-8') : '';
             $alt_text = !empty($caption) ? $caption : htmlspecialchars($item['name'] ?? $article['title'], ENT_QUOTES, 'UTF-8');
 
             $gallery_html .= '  <figure class="nc-gallery-item">' . "\n";
@@ -479,7 +480,7 @@ function nc_render_single_post($slug) {
         }
         $gallery_html .= '</div>' . "\n";
 
-        $gallery_html .= '<script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>' . "\n";
+        $gallery_html .= '<script src="' . NC_URL . 'assets/vendor/glightbox/glightbox.min.js"></script>' . "\n";
         $gallery_html .= '<script>
         document.addEventListener("DOMContentLoaded", function() {
             if (typeof GLightbox !== "undefined") {
@@ -496,20 +497,22 @@ function nc_render_single_post($slug) {
     $content_with_gallery = nc_sanitize_html($article['content']) . $gallery_html;
 
     $vars = [
-        'article.title'          => htmlspecialchars($article['title'], ENT_QUOTES, 'UTF-8'),
-        'article.slug'           => htmlspecialchars($article['slug'], ENT_QUOTES, 'UTF-8'),
-        'article.content'        => $content_with_gallery,
-        'article.excerpt'        => htmlspecialchars($article['excerpt'], ENT_QUOTES, 'UTF-8'),
-        'article.date'           => date($date_format, strtotime($article['published_at'])),
-        'article.date_raw'       => $article['published_at'],
-        'article.author'         => $author_meta['author_name'],
-        'article.author_url'     => htmlspecialchars($author_meta['author_url'], ENT_QUOTES, 'UTF-8'),
-        'article.authors'        => $author_meta['authors'],
-        'article.featured_image' => htmlspecialchars($article['featured_image'], ENT_QUOTES, 'UTF-8'),
-        'article.has_image'      => !empty($article['featured_image']),
-        'article.categories'     => implode(', ', $cat_links),
-        'article.tags'           => implode(' ', $tag_links),
-        'news.url'               => $news_url
+        'article.title'            => htmlspecialchars($article['title'], ENT_QUOTES, 'UTF-8'),
+        'article.slug'             => htmlspecialchars($article['slug'], ENT_QUOTES, 'UTF-8'),
+        'article.content'          => $content_with_gallery,
+        'article.excerpt'          => htmlspecialchars($article['excerpt'], ENT_QUOTES, 'UTF-8'),
+        'article.date'             => date($date_format, strtotime($article['published_at'])),
+        'article.date_raw'         => $article['published_at'],
+        'article.author'           => $author_meta['author_name'],
+        'article.author_url'       => htmlspecialchars($author_meta['author_url'], ENT_QUOTES, 'UTF-8'),
+        'article.authors'          => $author_meta['authors'],
+        'article.author_image'     => htmlspecialchars($author_meta['author_image'], ENT_QUOTES, 'UTF-8'),
+        'article.has_author_image' => !empty($author_meta['author_image']),
+        'article.featured_image'   => htmlspecialchars($article['featured_image'], ENT_QUOTES, 'UTF-8'),
+        'article.has_image'        => !empty($article['featured_image']),
+        'article.categories'       => implode(', ', $cat_links),
+        'article.tags'             => implode(' ', $tag_links),
+        'news.url'                 => $news_url
     ];
 
     return nc_render_template($template, $vars);
@@ -593,16 +596,18 @@ function nc_render_archive_list($filter_type = 'all', $filter_val = '') {
             $author_meta = nc_get_article_authors_data($art['id'], $art['author']);
 
             $vars = [
-                'article.title'          => htmlspecialchars($art['title'], ENT_QUOTES, 'UTF-8'),
-                'article.url'            => htmlspecialchars(nc_build_url('post', $art['slug']), ENT_QUOTES, 'UTF-8'),
-                'article.excerpt'        => htmlspecialchars($excerpt, ENT_QUOTES, 'UTF-8'),
-                'article.date'           => date($date_format, strtotime($art['published_at'])),
-                'article.author'         => $author_meta['author_name'],
-                'article.author_url'     => htmlspecialchars($author_meta['author_url']),
-                'article.authors'        => $author_meta['authors'],
-                'article.featured_image' => htmlspecialchars($art['featured_image'], ENT_QUOTES, 'UTF-8'),
-                'article.has_image'      => !empty($art['featured_image']),
-                'news.url'               => $news_url
+                'article.title'            => htmlspecialchars($art['title'], ENT_QUOTES, 'UTF-8'),
+                'article.url'              => htmlspecialchars(nc_build_url('post', $art['slug']), ENT_QUOTES, 'UTF-8'),
+                'article.excerpt'          => htmlspecialchars($excerpt, ENT_QUOTES, 'UTF-8'),
+                'article.date'             => date($date_format, strtotime($art['published_at'])),
+                'article.author'           => $author_meta['author_name'],
+                'article.author_url'       => htmlspecialchars($author_meta['author_url']),
+                'article.authors'          => $author_meta['authors'],
+                'article.author_image'     => htmlspecialchars($author_meta['author_image'], ENT_QUOTES, 'UTF-8'),
+                'article.has_author_image' => !empty($author_meta['author_image']),
+                'article.featured_image'   => htmlspecialchars($art['featured_image'], ENT_QUOTES, 'UTF-8'),
+                'article.has_image'        => !empty($art['featured_image']),
+                'news.url'                 => $news_url
             ];
             $output .= nc_render_template($item_template, $vars);
         }
@@ -680,16 +685,18 @@ function nc_get_recent_posts_html($limit = 3, $category_slug = '', $title = 'Lat
         $author_meta = nc_get_article_authors_data($art['id'], $art['author']);
 
         $vars = [
-            'article.title'          => htmlspecialchars($art['title'], ENT_QUOTES, 'UTF-8'),
-            'article.url'            => htmlspecialchars(nc_build_url('post', $art['slug']), ENT_QUOTES, 'UTF-8'),
-            'article.excerpt'        => htmlspecialchars($excerpt, ENT_QUOTES, 'UTF-8'),
-            'article.date'           => date($date_format, strtotime($art['published_at'])),
-            'article.author'         => $author_meta['author_name'],
-            'article.author_url'     => htmlspecialchars($author_meta['author_url']),
-            'article.authors'        => $author_meta['authors'],
-            'article.featured_image' => htmlspecialchars($art['featured_image']),
-            'article.has_image'      => !empty($art['featured_image']),
-            'news.url'               => $news_url
+            'article.title'            => htmlspecialchars($art['title'], ENT_QUOTES, 'UTF-8'),
+            'article.url'              => htmlspecialchars(nc_build_url('post', $art['slug']), ENT_QUOTES, 'UTF-8'),
+            'article.excerpt'          => htmlspecialchars($excerpt, ENT_QUOTES, 'UTF-8'),
+            'article.date'             => date($date_format, strtotime($art['published_at'])),
+            'article.author'           => $author_meta['author_name'],
+            'article.author_url'       => htmlspecialchars($author_meta['author_url']),
+            'article.authors'          => $author_meta['authors'],
+            'article.author_image'     => htmlspecialchars($author_meta['author_image'], ENT_QUOTES, 'UTF-8'),
+            'article.has_author_image' => !empty($author_meta['author_image']),
+            'article.featured_image'   => htmlspecialchars($art['featured_image'], ENT_QUOTES, 'UTF-8'),
+            'article.has_image'        => !empty($art['featured_image']),
+            'news.url'                 => $news_url
         ];
         $rendered_items .= nc_render_template($item_tpl, $vars) . "\n";
     }
@@ -705,7 +712,7 @@ function nc_get_recent_posts_html($limit = 3, $category_slug = '', $title = 'Lat
 }
 
 /**
- * Return formatted HTML of all authors with bios and article links
+ * Return formatted HTML of all authors with bios, avatars, and article links
  */
 function nc_get_authors_html() {
     $authors = nc_get_authors_with_counts();
@@ -727,14 +734,17 @@ function nc_get_authors_html() {
     foreach ($authors as $au) {
         $url = nc_build_url('author', $au['slug']);
         $bio = !empty($au['bio']) ? trim($au['bio']) : '';
+        $image = !empty($au['image']) ? trim($au['image']) : '';
 
         $vars = [
-            'author.name'    => htmlspecialchars($au['name'], ENT_QUOTES, 'UTF-8'),
-            'author.slug'    => htmlspecialchars($au['slug'], ENT_QUOTES, 'UTF-8'),
-            'author.bio'     => nl2br(htmlspecialchars($bio, ENT_QUOTES, 'UTF-8')),
-            'author.has_bio' => !empty($bio),
-            'author.url'     => htmlspecialchars($url, ENT_QUOTES, 'UTF-8'),
-            'author.count'   => (int)$au['article_count']
+            'author.name'      => htmlspecialchars($au['name'], ENT_QUOTES, 'UTF-8'),
+            'author.slug'      => htmlspecialchars($au['slug'], ENT_QUOTES, 'UTF-8'),
+            'author.bio'       => nl2br(htmlspecialchars($bio, ENT_QUOTES, 'UTF-8')),
+            'author.has_bio'   => !empty($bio),
+            'author.image'     => htmlspecialchars($image, ENT_QUOTES, 'UTF-8'),
+            'author.has_image' => !empty($image),
+            'author.url'       => htmlspecialchars($url, ENT_QUOTES, 'UTF-8'),
+            'author.count'     => (int)$au['article_count']
         ];
         $items_html .= nc_render_template($item_tpl, $vars) . "\n";
     }
@@ -744,7 +754,7 @@ function nc_get_authors_html() {
 }
 
 /**
- * Return formatted HTML of all categories with descriptions and article links
+ * Return formatted HTML of all categories with images, descriptions, and article links
  */
 function nc_get_categories_html() {
     $categories = nc_get_categories_with_counts();
@@ -766,12 +776,15 @@ function nc_get_categories_html() {
     foreach ($categories as $cat) {
         $url = nc_build_url('category', $cat['slug']);
         $desc = !empty($cat['description']) ? trim($cat['description']) : '';
+        $image = !empty($cat['image']) ? trim($cat['image']) : '';
 
         $vars = [
             'category.name'            => htmlspecialchars($cat['name'], ENT_QUOTES, 'UTF-8'),
             'category.slug'            => htmlspecialchars($cat['slug'], ENT_QUOTES, 'UTF-8'),
             'category.description'     => nl2br(htmlspecialchars($desc, ENT_QUOTES, 'UTF-8')),
             'category.has_description' => !empty($desc),
+            'category.image'           => htmlspecialchars($image, ENT_QUOTES, 'UTF-8'),
+            'category.has_image'       => !empty($image),
             'category.url'             => htmlspecialchars($url, ENT_QUOTES, 'UTF-8'),
             'category.count'           => (int)$cat['article_count']
         ];
@@ -782,9 +795,6 @@ function nc_get_categories_html() {
     return nc_get_frontend_css_tag() . $html;
 }
 
-/**
- * PHP Theme Function for Home Pages / Grid layouts
- */
 function nc_show_recent_posts($limit = 3, $category_slug = '', $title = 'Latest News', $author_slug = '') {
     echo nc_get_recent_posts_html($limit, $category_slug, $title, $author_slug);
 }
@@ -793,23 +803,14 @@ function nc_home_posts($limit = 3, $category_slug = '', $title = 'Latest News', 
     echo nc_get_recent_posts_html($limit, $category_slug, $title, $author_slug);
 }
 
-/**
- * PHP Theme Function for Authors Directory
- */
 function nc_show_authors() {
     echo nc_get_authors_html();
 }
 
-/**
- * PHP Theme Function for Categories Directory
- */
 function nc_show_categories() {
     echo nc_get_categories_html();
 }
 
-/**
- * Lightweight text-only list for narrow sidebars
- */
 function nc_show_recent_posts_list($limit = 5) {
     $db = nc_get_db();
     $settings = nc_get_settings();
@@ -839,9 +840,6 @@ function nc_show_recent_posts_list($limit = 5) {
     echo '</ul>';
 }
 
-/**
- * Display monthly archives list
- */
 function nc_show_archives() {
     $db = nc_get_db();
 

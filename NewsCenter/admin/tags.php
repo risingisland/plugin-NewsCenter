@@ -32,36 +32,8 @@ $tags = nc_get_tags_with_counts();
   </div>
 
   <div class="nc-form-grid">
-    <div class="nc-card">
-      <div class="nc-card-header">
-        <h3><?= ($edit_tag) ? i18n_r('NewsCenter/EDIT_TAG') : i18n_r('NewsCenter/ADD_TAG') ?></h3>
-      </div>
-      <form action="load.php?id=<?= NC_PLUGIN_ID ?>&action=save_tag" method="POST">
-        <input type="hidden" name="nc_csrf" value="<?= nc_csrf_token() ?>">
-        <input type="hidden" name="id" value="<?= ($edit_tag) ? (int)$edit_tag['id'] : 0 ?>">
-
-        <div class="nc-form-group">
-          <label for="tag-name"><?= i18n_r('NewsCenter/TAG_NAME') ?></label>
-          <input type="text" id="tag-name" name="name" value="<?= ($edit_tag) ? htmlspecialchars($edit_tag['name']) : '' ?>" class="nc-input" required>
-        </div>
-
-        <div class="nc-form-group">
-          <label for="tag-slug"><?= i18n_r('NewsCenter/SLUG') ?></label>
-          <input type="text" id="tag-slug" name="slug" value="<?= ($edit_tag) ? htmlspecialchars($edit_tag['slug']) : '' ?>" class="nc-input" required>
-        </div>
-
-        <div class="nc-actions-bar">
-          <button type="submit" class="nc-btn nc-btn-primary">
-            <?= ($edit_tag) ? i18n_r('NewsCenter/UPDATE_TAG') : i18n_r('NewsCenter/SAVE_TAG') ?>
-          </button>
-          <?php if ($edit_tag): ?>
-            <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=tags" class="nc-btn nc-btn-outline"><?= i18n_r('NewsCenter/CANCEL') ?></a>
-          <?php endif; ?>
-        </div>
-      </form>
-    </div>
-
-    <div class="nc-card">
+	
+	<div class="nc-card">
       <div class="nc-card-header">
         <h3><?= i18n_r('NewsCenter/ALL_TAGS') ?></h3>
       </div>
@@ -100,6 +72,36 @@ $tags = nc_get_tags_with_counts();
         <p class="nc-empty-state"><?= i18n_r('NewsCenter/NO_TAGS_YET') ?></p>
       <?php endif; ?>
     </div>
+  
+    <div class="nc-card">
+      <div class="nc-card-header">
+        <h3><?= ($edit_tag) ? i18n_r('NewsCenter/EDIT_TAG') : i18n_r('NewsCenter/ADD_TAG') ?></h3>
+      </div>
+      <form action="load.php?id=<?= NC_PLUGIN_ID ?>&action=save_tag" method="POST">
+        <input type="hidden" name="nc_csrf" value="<?= nc_csrf_token() ?>">
+        <input type="hidden" name="id" value="<?= ($edit_tag) ? (int)$edit_tag['id'] : 0 ?>">
+
+        <div class="nc-form-group">
+          <label for="tag-name"><?= i18n_r('NewsCenter/TAG_NAME') ?></label>
+          <input type="text" id="tag-name" name="name" value="<?= ($edit_tag) ? htmlspecialchars($edit_tag['name']) : '' ?>" class="nc-input" required>
+        </div>
+
+        <div class="nc-form-group">
+          <label for="tag-slug"><?= i18n_r('NewsCenter/SLUG') ?></label>
+          <input type="text" id="tag-slug" name="slug" value="<?= ($edit_tag) ? htmlspecialchars($edit_tag['slug']) : '' ?>" class="nc-input" required>
+        </div>
+
+        <div class="nc-actions-bar">
+          <button type="submit" class="nc-btn nc-btn-primary nc-btn-save">
+            <?= ($edit_tag) ? i18n_r('NewsCenter/UPDATE_TAG') : i18n_r('NewsCenter/SAVE_TAG') ?>
+          </button>
+          <?php if ($edit_tag): ?>
+            <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=tags" class="nc-btn nc-btn-outline"><?= i18n_r('NewsCenter/CANCEL') ?></a>
+          <?php endif; ?>
+        </div>
+      </form>
+    </div>
+	
   </div>
 </div>
 
