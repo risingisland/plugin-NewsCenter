@@ -117,20 +117,60 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
       </div>
       <pre><code>&lt;?php if (function_exists('nc_show_recent_posts')) { nc_show_recent_posts(3); } ?&gt;</code></pre>
     </div>
+  </div>
 
-    <p>Custom title, category, and author parameters:</p>
+  <!-- 2. Authors Directory Integration -->
+  <div class="nc-doc-card">
+    <h3>2. Authors Directory (Bios &amp; Profiles)</h3>
+    <p>Display all authors in a responsive card grid showing their names, bios, article counts, and direct links to their article archives.</p>
+
+    <h4>Option A: Page Content Shortcode</h4>
+    <p>Place this on an "About the Authors" page:</p>
     <div class="nc-code-wrapper">
       <div class="nc-code-header">
-        <span>PHP Parameterized Hook</span>
+        <span>Shortcode</span>
         <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)">📋 Copy</button>
       </div>
-      <pre><code>&lt;?php if (function_exists('nc_show_recent_posts')) { nc_show_recent_posts(3, 'announcements', 'Company Updates', 'john-doe'); } ?&gt;</code></pre>
+      <pre><code>[get-newscenter-authors]</code></pre>
+    </div>
+
+    <h4>Option B: Theme PHP Call</h4>
+    <div class="nc-code-wrapper">
+      <div class="nc-code-header">
+        <span>PHP Theme Hook</span>
+        <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)">📋 Copy</button>
+      </div>
+      <pre><code>&lt;?php if (function_exists('nc_show_authors')) { nc_show_authors(); } ?&gt;</code></pre>
     </div>
   </div>
 
-  <!-- 2. Sidebar Widgets -->
+  <!-- 3. Categories Directory Integration -->
   <div class="nc-doc-card">
-    <h3>2. Sidebar Widgets</h3>
+    <h3>3. Categories Directory (Descriptions &amp; Archive Links)</h3>
+    <p>Display all categories in a clean card grid showing category names, descriptions, post counts, and direct links.</p>
+
+    <h4>Option A: Page Content Shortcode</h4>
+    <div class="nc-code-wrapper">
+      <div class="nc-code-header">
+        <span>Shortcode</span>
+        <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)">📋 Copy</button>
+      </div>
+      <pre><code>[get-newscenter-categories]</code></pre>
+    </div>
+
+    <h4>Option B: Theme PHP Call</h4>
+    <div class="nc-code-wrapper">
+      <div class="nc-code-header">
+        <span>PHP Theme Hook</span>
+        <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)">📋 Copy</button>
+      </div>
+      <pre><code>&lt;?php if (function_exists('nc_show_categories')) { nc_show_categories(); } ?&gt;</code></pre>
+    </div>
+  </div>
+
+  <!-- 4. Sidebar Widgets -->
+  <div class="nc-doc-card">
+    <h3>4. Sidebar Widgets</h3>
     <p>Lightweight PHP calls designed for narrow sidebars or footer columns.</p>
 
     <h4>Recent Posts (List View)</h4>
@@ -152,9 +192,9 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
     </div>
   </div>
 
-  <!-- 3. Template Engine Placeholders -->
+  <!-- 5. Template Engine Placeholders -->
   <div class="nc-doc-card">
-    <h3>3. Template Placeholders Reference</h3>
+    <h3>5. Template Placeholders Reference</h3>
     <p>These variables can be used when editing templates under <strong>NewsCenter &rarr; Templates</strong>:</p>
 
     <table class="nc-table">
@@ -166,6 +206,56 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
         </tr>
       </thead>
       <tbody>
+        <tr>
+          <td><code>{{author.name}}</code></td>
+          <td>Author Item</td>
+          <td>Author's display name.</td>
+        </tr>
+        <tr>
+          <td><code>{{author.bio}}</code></td>
+          <td>Author Item</td>
+          <td>Author's biographical text (with line-breaks).</td>
+        </tr>
+        <tr>
+          <td><code>{{author.url}}</code></td>
+          <td>Author Item</td>
+          <td>Link to all articles written by this author.</td>
+        </tr>
+        <tr>
+          <td><code>{{author.count}}</code></td>
+          <td>Author Item</td>
+          <td>Total number of published articles by this author.</td>
+        </tr>
+        <tr>
+          <td><code>{{authors.items}}</code></td>
+          <td>Authors List Container</td>
+          <td>Renders all individual author profile cards.</td>
+        </tr>
+        <tr>
+          <td><code>{{category.name}}</code></td>
+          <td>Category Item</td>
+          <td>Category name.</td>
+        </tr>
+        <tr>
+          <td><code>{{category.description}}</code></td>
+          <td>Category Item</td>
+          <td>Category description text (with line-breaks).</td>
+        </tr>
+        <tr>
+          <td><code>{{category.url}}</code></td>
+          <td>Category Item</td>
+          <td>Link to the category's archive feed.</td>
+        </tr>
+        <tr>
+          <td><code>{{category.count}}</code></td>
+          <td>Category Item</td>
+          <td>Total number of articles in this category.</td>
+        </tr>
+        <tr>
+          <td><code>{{categories.items}}</code></td>
+          <td>Categories List Container</td>
+          <td>Renders all individual category cards.</td>
+        </tr>
         <tr>
           <td><code>{{article.title}}</code></td>
           <td>Single, List, Home</td>
@@ -184,7 +274,7 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
         <tr>
           <td><code>{{article.author_url}}</code></td>
           <td>Single, List, Home</td>
-          <td>URL linking to all articles written by this author (<code>?author=[slug]</code>).</td>
+          <td>URL linking to all articles written by this author.</td>
         </tr>
         <tr>
           <td><code>{{article.authors}}</code></td>
@@ -221,33 +311,18 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
           <td>Single</td>
           <td>HTML links of assigned tags.</td>
         </tr>
-        <tr>
-          <td><code>{{section.title}}</code></td>
-          <td>Home Posts Container</td>
-          <td>Heading title passed to the home grid.</td>
-        </tr>
-        <tr>
-          <td><code>{{posts.items}}</code></td>
-          <td>Home Posts Container</td>
-          <td>Renders all individual <code>home_item</code> cards.</td>
-        </tr>
-        <tr>
-          <td><code>frontend_css</code></td>
-          <td>Templates Dropdown</td>
-          <td>Full frontend stylesheet controlling typography, grid layout, cards, and lightbox galleries.</td>
-        </tr>
       </tbody>
     </table>
 
     <h4 style="margin-top:20px;">Conditionals Syntax</h4>
     <div class="nc-code-wrapper">
       <div class="nc-code-header">
-        <span>Conditional Syntax</span>
+        <span>Author Bio Conditional</span>
         <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)">📋 Copy</button>
       </div>
-      <pre><code>{{if:article.has_image}}
-  &lt;div class="featured-img"&gt;&lt;img src="{{article.featured_image}}" alt="{{article.title}}"&gt;&lt;/div&gt;
-{{/if:article.has_image}}</code></pre>
+      <pre><code>{{if:author.has_bio}}
+  &lt;p class="nc-author-bio"&gt;{{author.bio}}&lt;/p&gt;
+{{/if:author.has_bio}}</code></pre>
     </div>
   </div>
 </div>

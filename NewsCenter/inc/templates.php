@@ -83,6 +83,54 @@ if (!function_exists('nc_reset_default_templates')) {
   </div>
 </article>'
             ],
+            'authors_list' => [
+                'title'   => 'Authors Directory Grid Container',
+                'content' => '<section class="nc-authors-section">
+  <div class="nc-section-header">
+    <h2 class="nc-section-title">Our Authors</h2>
+  </div>
+  <div class="nc-authors-grid">
+    {{authors.items}}
+  </div>
+</section>'
+            ],
+            'author_item' => [
+                'title'   => 'Author Profile Card Item',
+                'content' => '<article class="nc-author-card">
+  <div class="nc-author-card-body">
+    <h3 class="nc-author-name"><a href="{{author.url}}">{{author.name}}</a></h3>
+    <span class="nc-author-count">{{author.count}} Articles</span>
+    {{if:author.has_bio}}
+    <p class="nc-author-bio">{{author.bio}}</p>
+    {{/if:author.has_bio}}
+    <a href="{{author.url}}" class="nc-author-view-articles">View Articles &rarr;</a>
+  </div>
+</article>'
+            ],
+            'categories_list' => [
+                'title'   => 'Categories Directory Grid Container',
+                'content' => '<section class="nc-categories-section">
+  <div class="nc-section-header">
+    <h2 class="nc-section-title">Categories</h2>
+  </div>
+  <div class="nc-categories-grid">
+    {{categories.items}}
+  </div>
+</section>'
+            ],
+            'category_item' => [
+                'title'   => 'Category Card Item',
+                'content' => '<article class="nc-category-card">
+  <div class="nc-category-card-body">
+    <h3 class="nc-category-title"><a href="{{category.url}}">{{category.name}}</a></h3>
+    <span class="nc-category-count">{{category.count}} Articles</span>
+    {{if:category.has_description}}
+    <p class="nc-category-desc">{{category.description}}</p>
+    {{/if:category.has_description}}
+    <a href="{{category.url}}" class="nc-category-view-link">Browse Category &rarr;</a>
+  </div>
+</article>'
+            ],
             'frontend_css' => [
                 'title'   => 'Frontend CSS Stylesheet',
                 'content' => '/* ==========================================================================
@@ -395,6 +443,85 @@ if (!function_exists('nc_reset_default_templates')) {
   align-self: flex-start;
 }
 .nc-home-card-readmore:hover {
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   Authors & Categories Directory Cards
+   ========================================================================== */
+.nc-authors-section, .nc-categories-section {
+  margin: 30px 0;
+  font-family: inherit;
+  width: 100%;
+}
+.nc-section-header {
+  margin-bottom: 20px;
+  border-bottom: 2px solid #f1f5f9;
+  padding-bottom: 8px;
+}
+.nc-section-title {
+  margin: 0;
+  font-size: 22px;
+  color: #1e293b;
+  font-weight: 700;
+}
+.nc-authors-grid, .nc-categories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+.nc-author-card, .nc-category-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.nc-author-card:hover, .nc-category-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+.nc-author-card-body, .nc-category-card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.nc-author-name, .nc-category-title {
+  margin: 0 0 6px 0;
+  font-size: 19px;
+}
+.nc-author-name a, .nc-category-title a {
+  color: #0f172a;
+  text-decoration: none;
+  font-weight: 600;
+}
+.nc-author-name a:hover, .nc-category-title a:hover {
+  color: #2563eb;
+}
+.nc-author-count, .nc-category-count {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+.nc-author-bio, .nc-category-desc {
+  font-size: 13.5px;
+  color: #475569;
+  line-height: 1.5;
+  margin: 0 0 16px 0;
+  flex-grow: 1;
+}
+.nc-author-view-articles, .nc-category-view-link {
+  font-size: 13px;
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+  align-self: flex-start;
+}
+.nc-author-view-articles:hover, .nc-category-view-link:hover {
   text-decoration: underline;
 }
 

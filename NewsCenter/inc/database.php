@@ -134,8 +134,8 @@ function nc_init_database() {
             'posts_per_page'   => '10',
             'date_format'      => 'F j, Y',
             'excerpt_length'   => '250',
-            'custom_css'       => '',
-            'sitemap_priority' => '0.8'
+            'sitemap_priority' => '0.8',
+            'trailing_slash'   => '1'
         ];
         foreach ($defaults as $k => $v) {
             $stmt->execute([$k, $v]);

@@ -2,95 +2,191 @@
 if (!defined('IN_GS')) { die('Direct access denied.'); }
 
 $settings = nc_get_settings();
+$active_slug = !empty($settings['page_slug']) ? $settings['page_slug'] : 'news';
+$trailing_slash = (!isset($settings['trailing_slash']) || $settings['trailing_slash'] === '1');
 
-$page_slug        = $settings['page_slug'] ?? 'news';
-$posts_per_page   = $settings['posts_per_page'] ?? '10';
-$date_format      = $settings['date_format'] ?? 'F j, Y';
-$excerpt_length   = $settings['excerpt_length'] ?? '250';
-$custom_css       = $settings['custom_css'] ?? '';
-$sitemap_priority = $settings['sitemap_priority'] ?? '0.8';
+// Collect all existing GetSimple CMS CE pages from data/pages/
+$pages = [];
+$page_files = glob(GSDATAPAGESPATH . '*.xml');
+if ($page_files) {
+    foreach ($page_files as $pf) {
+        $slug = basename($pf, '.xml');
+        $xml = @simplexml_load_file($pf);
+        $page_title = $xml ? (string)$xml->title : $slug;
+        $pages[] = [
+            'slug'  => $slug,
+            'title' => $page_title
+        ];
+    }
+    usort($pages, function($a, $b) {
+        return strcmp($a['title'], $b['title']);
+    });
+}
 ?>
 
 <div class="nc-container">
   <div class="nc-page-header">
-    <h2><?= i18n_r('NewsCenter/TAB_SETTINGS') ?></h2>
+    <h2>NewsCenter Settings</h2>
   </div>
 
-  <form action="load.php?id=<?= NC_PLUGIN_ID ?>&action=save_settings" method="POST" class="nc-form-grid">
-    <input type="hidden" name="nc_csrf" value="<?= nc_csrf_token() ?>">
+  <div class="nc-card">
+    <form action="load.php?id=<?= NC_PLUGIN_ID ?>&action=save_settings" method="POST">
+      <input type="hidden" name="nc_csrf" value="<?= nc_csrf_token() ?>">
 
-    <div class="nc-main-col">
-      <div class="nc-card">
-        <div class="nc-card-header">
-          <h3><?= i18n_r('NewsCenter/GENERAL_SETTINGS') ?></h3>
-        </div>
-
-        <div class="nc-form-group">
-          <label for="page_slug"><?= i18n_r('NewsCenter/SETTING_PAGE_SLUG') ?></label>
-          <input type="text" id="page_slug" name="page_slug" value="<?= htmlspecialchars($page_slug) ?>" class="nc-input" required>
-          <span class="nc-help-text"><?= i18n_r('NewsCenter/SETTING_PAGE_SLUG_HELP') ?></span>
-        </div>
-
-        <div class="nc-form-row">
-          <div class="nc-form-group nc-col-half">
-            <label for="posts_per_page"><?= i18n_r('NewsCenter/SETTING_POSTS_PER_PAGE') ?></label>
-            <input type="number" id="posts_per_page" name="posts_per_page" value="<?= (int)$posts_per_page ?>" min="1" max="100" class="nc-input" required>
-          </div>
-
-          <div class="nc-form-group nc-col-half">
-            <label for="excerpt_length"><?= i18n_r('NewsCenter/SETTING_EXCERPT_LENGTH') ?></label>
-            <input type="number" id="excerpt_length" name="excerpt_length" value="<?= (int)$excerpt_length ?>" min="50" max="1000" class="nc-input" required>
-          </div>
-        </div>
-
-        <div class="nc-form-group">
-          <label for="date_format"><?= i18n_r('NewsCenter/SETTING_DATE_FORMAT') ?></label>
-          <input type="text" id="date_format" name="date_format" value="<?= htmlspecialchars($date_format) ?>" class="nc-input" required>
-          <span class="nc-help-text"><?= i18n_r('NewsCenter/SETTING_DATE_FORMAT_HELP') ?> (<code><?= date($date_format) ?></code>)</span>
-        </div>
-      </div>
-
-      <div class="nc-card">
-        <div class="nc-card-header">
-          <h3><?= i18n_r('NewsCenter/CUSTOM_CSS') ?></h3>
-        </div>
-        <p class="nc-help-text"><?= i18n_r('NewsCenter/CUSTOM_CSS_HELP') ?></p>
-        <div class="nc-form-group">
-          <textarea id="custom_css" name="custom_css" class="nc-textarea nc-code-textarea" rows="10" placeholder=":root { --nc-primary: #1e70bf; }"><?= htmlspecialchars($custom_css) ?></textarea>
-        </div>
-      </div>
-    </div>
-
-    <div class="nc-side-col">
-      <div class="nc-card">
-        <div class="nc-card-header">
-          <h3><?= i18n_r('NewsCenter/SEO_AND_FEEDS') ?></h3>
-        </div>
-
-        <div class="nc-form-group">
-          <label for="sitemap_priority"><?= i18n_r('NewsCenter/SITEMAP_PRIORITY') ?></label>
-          <select id="sitemap_priority" name="sitemap_priority" class="nc-select">
-            <option value="1.0" <?= ($sitemap_priority === '1.0') ? 'selected' : '' ?>>1.0 (Highest)</option>
-            <option value="0.8" <?= ($sitemap_priority === '0.8') ? 'selected' : '' ?>>0.8 (High)</option>
-            <option value="0.6" <?= ($sitemap_priority === '0.6') ? 'selected' : '' ?>>0.6 (Medium)</option>
-            <option value="0.4" <?= ($sitemap_priority === '0.4') ? 'selected' : '' ?>>0.4 (Low)</option>
+      <div class="nc-form-group">
+        <label for="nc-select-page">Target News Page</label>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <select id="nc-select-page" class="nc-select" style="max-width:320px;">
+            <option value="">-- Choose Existing Page --</option>
+            <?php foreach ($pages as $p): ?>
+              <option value="<?= htmlspecialchars($p['slug']) ?>" <?= ($p['slug'] === $active_slug) ? 'selected' : '' ?>>
+                <?= htmlspecialchars($p['title']) ?> (<?= htmlspecialchars($p['slug']) ?>)
+              </option>
+            <?php endforeach; ?>
           </select>
-          <span class="nc-help-text"><?= i18n_r('NewsCenter/SITEMAP_PRIORITY_HELP') ?></span>
+          <span style="font-size:13px; color:var(--nc-text-muted);">&larr; Select to auto-fill slug</span>
         </div>
-
-        <button type="submit" class="nc-btn nc-btn-primary nc-btn-block"><?= i18n_r('NewsCenter/SAVE_SETTINGS') ?></button>
       </div>
 
-      <div class="nc-card">
-        <div class="nc-card-header">
-          <h3><?= i18n_r('NewsCenter/BACKUP_AND_DATABASE') ?></h3>
-        </div>
-        <p class="nc-help-text"><?= i18n_r('NewsCenter/BACKUP_INFO') ?></p>
-        <ul class="nc-status-info">
-          <li><span><?= i18n_r('NewsCenter/LOCATION') ?>:</span> <code>data/other/newscenter/</code></li>
-          <li><span><?= i18n_r('NewsCenter/FILE') ?>:</span> <code>newscenter.db</code></li>
-        </ul>
+      <div class="nc-form-group">
+        <label for="page_slug">Target News Page Slug</label>
+        <input type="text" id="page_slug" name="page_slug" value="<?= htmlspecialchars($active_slug) ?>" class="nc-input" style="max-width:320px;" required>
+        <span class="nc-help-text">Slug of the GetSimple page that displays your news feed.</span>
       </div>
+
+      <!-- Trailing Slash Checkbox -->
+      <div class="nc-form-group" style="margin: 20px 0;">
+        <label style="display:inline-flex; align-items:center; gap:8px; font-weight:600; cursor:pointer;">
+          <input type="checkbox" id="trailing_slash" name="trailing_slash" value="1" <?= $trailing_slash ? 'checked' : '' ?> style="width:auto; margin:0;">
+          Include Trailing Slash on Fancy Links
+        </label>
+        <span class="nc-help-text" style="margin-left:22px;">
+          When checked: <code>/news/post/my-article/</code> &bull; When unchecked: <code>/news/post/my-article</code>
+        </span>
+      </div>
+
+      <div class="nc-form-row">
+        <div class="nc-form-group nc-col-half">
+          <label for="posts_per_page">Articles Per Page</label>
+          <input type="number" id="posts_per_page" name="posts_per_page" value="<?= (int)($settings['posts_per_page'] ?? 10) ?>" class="nc-input" min="1" max="100">
+        </div>
+
+        <div class="nc-form-group nc-col-half">
+          <label for="excerpt_length">Excerpt Length (characters)</label>
+          <input type="number" id="excerpt_length" name="excerpt_length" value="<?= (int)($settings['excerpt_length'] ?? 250) ?>" class="nc-input" min="50" max="1000">
+        </div>
+      </div>
+
+      <div class="nc-form-row">
+        <div class="nc-form-group nc-col-half">
+          <label for="date_format">Date Format</label>
+          <input type="text" id="date_format" name="date_format" value="<?= htmlspecialchars($settings['date_format'] ?? 'F j, Y') ?>" class="nc-input">
+          <span class="nc-help-text">PHP Date formatting string (e.g. <code>F j, Y</code>, <code>Y-m-d</code>).</span>
+        </div>
+
+        <div class="nc-form-group nc-col-half">
+          <label for="sitemap_priority">Sitemap Priority</label>
+          <select id="sitemap_priority" name="sitemap_priority" class="nc-select">
+            <?php foreach (['1.0', '0.8', '0.6', '0.4'] as $p): ?>
+              <option value="<?= $p ?>" <?= (($settings['sitemap_priority'] ?? '0.8') === $p) ? 'selected' : '' ?>><?= $p ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+      </div>
+
+      <div class="nc-actions-bar" style="margin-top:20px;">
+        <button type="submit" class="nc-btn nc-btn-primary">&#128190; Save Settings</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Sitemap Rebuilder Card -->
+  <div class="nc-card" style="margin-top:25px;">
+    <div class="nc-card-header" style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 style="margin:0;">XML Sitemap Maintenance</h3>
+      <form action="load.php?id=<?= NC_PLUGIN_ID ?>&action=rebuild_sitemap" method="POST" style="margin:0;">
+        <input type="hidden" name="nc_csrf" value="<?= nc_csrf_token() ?>">
+        <button type="submit" class="nc-btn nc-btn-small nc-btn-secondary">&#8634; Rebuild Sitemap Now</button>
+      </form>
     </div>
-  </form>
+    <p style="font-size:13px; color:var(--nc-text-muted); margin:0;">
+      Articles are automatically appended to your root <code>sitemap.xml</code> whenever published or edited. Click the button above if you wish to manually regenerate the static XML file immediately.
+    </p>
+  </div>
+
+  <!-- Dynamic .htaccess Rules Card -->
+  <div class="nc-card" style="margin-top:25px;">
+    <div class="nc-card-header" style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 style="margin:0;">Apache .htaccess Rules</h3>
+      <button type="button" class="nc-btn nc-btn-small nc-btn-primary" id="nc-copy-rules-btn" onclick="ncCopyHtaccess()">📋 Copy Rules</button>
+    </div>
+    <p style="font-size:13px; color:var(--nc-text-muted); margin:0 0 12px 0;">
+      If Fancy (pretty) URLs are enabled in GetSimple, paste these rewrite rules into your root <code>.htaccess</code> file right before <code># default rewrite rule</code>.
+    </p>
+
+    <div style="background:#0f172a; border-radius:6px; overflow:hidden; border:1px solid #1e293b;">
+      <pre style="margin:0; padding:16px; font-family:'Consolas','Monaco',monospace; font-size:13px; color:#f8fafc; overflow-x:auto; line-height:1.6;" id="nc-htaccess-code"><code># NewsCenter Fancy Sub-paths for "<?= htmlspecialchars($active_slug) ?>"
+RewriteRule ^<?= htmlspecialchars($active_slug) ?>/post/([A-Za-z0-9_-]+)/?$ index.php?id=<?= htmlspecialchars($active_slug) ?>&post=$1 [QSA,L]
+RewriteRule ^<?= htmlspecialchars($active_slug) ?>/category/([A-Za-z0-9_-]+)/?$ index.php?id=<?= htmlspecialchars($active_slug) ?>&category=$1 [QSA,L]
+RewriteRule ^<?= htmlspecialchars($active_slug) ?>/tag/([A-Za-z0-9_-]+)/?$ index.php?id=<?= htmlspecialchars($active_slug) ?>&tag=$1 [QSA,L]
+RewriteRule ^<?= htmlspecialchars($active_slug) ?>/author/([A-Za-z0-9_-]+)/?$ index.php?id=<?= htmlspecialchars($active_slug) ?>&author=$1 [QSA,L]
+RewriteRule ^<?= htmlspecialchars($active_slug) ?>/archive/([0-9]{4}-[0-9]{2})/?$ index.php?id=<?= htmlspecialchars($active_slug) ?>&archive=$1 [QSA,L]
+RewriteRule ^<?= htmlspecialchars($active_slug) ?>/page/([0-9]+)/?$ index.php?id=<?= htmlspecialchars($active_slug) ?>&page=$1 [QSA,L]</code></pre>
+    </div>
+  </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const pageSelect = document.getElementById('nc-select-page');
+    const slugInput = document.getElementById('page_slug');
+    const codeEl = document.getElementById('nc-htaccess-code');
+
+    function updateHtaccessText(slug) {
+        if (!slug) slug = 'news';
+        codeEl.innerHTML = `<code># NewsCenter Fancy Sub-paths for "${slug}"
+RewriteRule ^${slug}/post/([A-Za-z0-9_-]+)/?$ index.php?id=${slug}&post=$1 [QSA,L]
+RewriteRule ^${slug}/category/([A-Za-z0-9_-]+)/?$ index.php?id=${slug}&category=$1 [QSA,L]
+RewriteRule ^${slug}/tag/([A-Za-z0-9_-]+)/?$ index.php?id=${slug}&tag=$1 [QSA,L]
+RewriteRule ^${slug}/author/([A-Za-z0-9_-]+)/?$ index.php?id=${slug}&author=$1 [QSA,L]
+RewriteRule ^${slug}/archive/([0-9]{4}-[0-9]{2})/?$ index.php?id=${slug}&archive=$1 [QSA,L]
+RewriteRule ^${slug}/page/([0-9]+)/?$ index.php?id=${slug}&page=$1 [QSA,L]</code>`;
+    }
+
+    if (pageSelect && slugInput) {
+        pageSelect.addEventListener('change', () => {
+            if (pageSelect.value) {
+                slugInput.value = pageSelect.value;
+                updateHtaccessText(pageSelect.value);
+            }
+        });
+
+        slugInput.addEventListener('input', () => {
+            updateHtaccessText(slugInput.value.trim());
+        });
+    }
+});
+
+function ncCopyHtaccess() {
+    const code = document.getElementById('nc-htaccess-code');
+    const btn = document.getElementById('nc-copy-rules-btn');
+    if (!code || !btn) return;
+
+    const text = code.innerText.trim();
+    navigator.clipboard.writeText(text).then(() => {
+        btn.innerText = '✓ Copied!';
+        setTimeout(() => { btn.innerText = '📋 Copy Rules'; }, 1800);
+    }).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        btn.innerText = '✓ Copied!';
+        setTimeout(() => { btn.innerText = '📋 Copy Rules'; }, 1800);
+    });
+}
+</script>

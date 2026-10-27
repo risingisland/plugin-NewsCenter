@@ -5,11 +5,15 @@ $db = nc_get_db();
 
 // Registered template choices
 $template_options = [
-    'single'       => 'Single Article Template (single)',
-    'list_item'    => 'Article List Item Template (list_item)',
-    'home_posts'   => 'Home Page Posts Grid Container (home_posts)',
-    'home_item'    => 'Home Page Post Card Item (home_item)',
-    'frontend_css' => 'Frontend CSS Stylesheet (frontend_css)'
+    'single'          => 'Single Article Template (single)',
+    'list_item'       => 'Article List Item Template (list_item)',
+    'home_posts'      => 'Home Page Posts Grid Container (home_posts)',
+    'home_item'       => 'Home Page Post Card Item (home_item)',
+    'authors_list'    => 'Authors Directory Grid Container (authors_list)',
+    'author_item'     => 'Author Profile Card Item (author_item)',
+    'categories_list' => 'Categories Directory Grid Container (categories_list)',
+    'category_item'   => 'Category Card Item (category_item)',
+    'frontend_css'    => 'Frontend CSS Stylesheet (frontend_css)'
 ];
 
 // Active key
@@ -54,7 +58,7 @@ $is_css = ($active_key === 'frontend_css');
   <div class="nc-card">
     <div style="margin-bottom: 18px; display:flex; align-items:center; gap:12px;">
       <label for="nc-template-picker" style="font-weight:600; font-size:13px;">Select Template to Edit:</label>
-      <select id="nc-template-picker" class="nc-select" style="max-width:380px;" onchange="location.href='load.php?id=<?= NC_PLUGIN_ID ?>&action=templates&key=' + encodeURIComponent(this.value);">
+      <select id="nc-template-picker" class="nc-select" style="max-width:420px;" onchange="location.href='load.php?id=<?= NC_PLUGIN_ID ?>&action=templates&key=' + encodeURIComponent(this.value);">
         <?php foreach ($template_options as $key => $label): ?>
           <option value="<?= htmlspecialchars($key) ?>" <?= ($active_key === $key) ? 'selected' : '' ?>><?= htmlspecialchars($label) ?></option>
         <?php endforeach; ?>

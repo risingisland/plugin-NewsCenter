@@ -289,6 +289,9 @@ function nc_handle_get_delete_actions() {
     if (isset($_GET['article_id'])) {
         $del_id = (int)$_GET['article_id'];
         nc_delete_article($del_id);
+        if (function_exists('nc_generate_sitemap')) {
+            nc_generate_sitemap();
+        }
         redirect('load.php?id=' . NC_PLUGIN_ID . '&action=articles&status=deleted');
     }
 
@@ -372,7 +375,20 @@ function nc_handle_post_actions($action) {
         $authors = isset($_POST['authors']) && is_array($_POST['authors']) ? $_POST['authors'] : [];
 
         $saved_id = nc_save_article($data, $categories, $tags, $authors);
+
+        // Regenerate root sitemap.xml on disk immediately
+        if (function_exists('nc_generate_sitemap')) {
+            nc_generate_sitemap();
+        }
+
         redirect('load.php?id=' . NC_PLUGIN_ID . '&action=edit-article&article_id=' . $saved_id . '&status=saved');
+    }
+
+    if ($action === 'rebuild_sitemap') {
+        if (function_exists('nc_generate_sitemap')) {
+            nc_generate_sitemap();
+        }
+        redirect('load.php?id=' . NC_PLUGIN_ID . '&action=settings&status=saved');
     }
 
     if ($action === 'save_category') {
@@ -436,17 +452,14 @@ function nc_handle_post_actions($action) {
             'posts_per_page'   => max(1, (int)($_POST['posts_per_page'] ?? 10)),
             'excerpt_length'   => max(50, (int)($_POST['excerpt_length'] ?? 250)),
             'date_format'      => trim($_POST['date_format'] ?? 'F j, Y'),
-            'custom_css'       => trim($_POST['custom_css'] ?? ''),
-            'sitemap_priority' => in_array($_POST['sitemap_priority'] ?? '', ['1.0', '0.8', '0.6', '0.4']) ? $_POST['sitemap_priority'] : '0.8'
+            'sitemap_priority' => in_array($_POST['sitemap_priority'] ?? '', ['1.0', '0.8', '0.6', '0.4']) ? $_POST['sitemap_priority'] : '0.8',
+            'trailing_slash'   => !empty($_POST['trailing_slash']) ? '1' : '0'
         ];
 
         nc_save_settings($settings);
 
-        $custom_css_file = NC_DIR . 'assets/css/custom.css';
-        if (!empty($settings['custom_css'])) {
-            file_put_contents($custom_css_file, $settings['custom_css']);
-        } elseif (file_exists($custom_css_file)) {
-            unlink($custom_css_file);
+        if (function_exists('nc_generate_sitemap')) {
+            nc_generate_sitemap();
         }
 
         redirect('load.php?id=' . NC_PLUGIN_ID . '&action=settings&status=saved');

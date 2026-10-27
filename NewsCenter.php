@@ -60,11 +60,16 @@ add_action('newscenter-sidebar', 'createSideMenu', [NC_PLUGIN_ID, i18n_r('NewsCe
 add_action('newscenter-sidebar', 'createSideMenu', [NC_PLUGIN_ID, i18n_r('NewsCenter/TAB_SETTINGS'), 'action=settings']);
 add_action('newscenter-sidebar', 'createSideMenu', [NC_PLUGIN_ID, i18n_r('NewsCenter/TAB_DOCS'), 'action=docs']);
 
-# Inject Head Stylesheets
+# Inject Head Stylesheets in Admin
 add_action('header', 'nc_admin_header_include');
 
 # Early Request Interceptor (Runs BEFORE admin template header is sent)
 add_action('admin-pre-header', 'nc_admin_pre_header_intercept');
+
+# Frontend & Sitemap Hooks
+add_action('index-pretemplate', 'nc_frontend_handler');
+add_action('sitemap-aftersave', 'nc_generate_sitemap');
+add_action('theme-header', 'nc_header_meta');
 
 /**
  * Intercept POST submissions, GET deletes and AJAX endpoints before load.php prints template/header.php
@@ -80,7 +85,6 @@ function nc_admin_pre_header_intercept() {
         die(i18n_r('NewsCenter/ACCESS_DENIED'));
     }
 
-    // Determine action
     $action = 'dashboard';
     if (!empty($_GET['action'])) {
         $action = nc_sanitize_slug($_GET['action']);
@@ -94,17 +98,14 @@ function nc_admin_pre_header_intercept() {
         }
     }
 
-    // 1. Process POST actions (with redirect) BEFORE header is output
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action !== 'ajax_upload') {
         nc_handle_post_actions($action);
     }
 
-    // 2. Process GET delete actions (with redirect) BEFORE header is output
     if (isset($_GET['do']) && $_GET['do'] === 'delete') {
         nc_handle_get_delete_actions();
     }
 
-    // 3. Process AJAX endpoints
     if ($action === 'ajax_media') {
         nc_ajax_get_media();
         exit;
