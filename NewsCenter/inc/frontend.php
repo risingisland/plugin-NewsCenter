@@ -10,6 +10,33 @@ add_filter('content', 'nc_content_shortcode_filter');
 add_action('theme-header', 'nc_inject_frontend_css');
 
 /**
+ * Stores or retrieves the active NewsCenter article for SEO and header hooks.
+ */
+function nc_current_article($set = null) {
+    static $article = null;
+    if ($set !== null) {
+        $article = $set;
+    }
+    return $article;
+}
+
+/**
+ * Returns the web URL of the current article's featured image, if any.
+ */
+function nc_get_current_featured_image() {
+    $article = nc_current_article();
+    if (!empty($article['featured_image'])) {
+        $img = trim($article['featured_image']);
+        if (!preg_match('#^(https?:)?//#i', $img)) {
+            global $SITEURL;
+            return rtrim($SITEURL, '/') . '/' . ltrim($img, '/');
+        }
+        return $img;
+    }
+    return '';
+}
+
+/**
  * Clean URL Generator supporting both Fancy (pretty) URLs and standard query parameters,
  * with optional trailing slash control.
  */
@@ -209,6 +236,8 @@ function nc_frontend_handler() {
         $article = $stmt->fetch();
 
         if ($article) {
+            nc_current_article($article);
+
             $data_index->title = !empty($article['meta_title']) ? $article['meta_title'] : $article['title'];
             $title = $data_index->title;
 
@@ -364,7 +393,7 @@ function nc_dispatch_frontend() {
 }
 
 /**
- * Helper to get authors assigned to an article with SEO links
+ * Helper to get authors assigned to an article with individual SEO links and avatar
  */
 function nc_get_article_authors_data($article_id, $default_author_string = 'Admin') {
     $db = nc_get_db();
@@ -386,13 +415,14 @@ function nc_get_article_authors_data($article_id, $default_author_string = 'Admi
 
     if (!empty($authors)) {
         foreach ($authors as $i => $a) {
-            $names[] = htmlspecialchars($a['name'], ENT_QUOTES, 'UTF-8');
+            $name_esc = htmlspecialchars($a['name'], ENT_QUOTES, 'UTF-8');
+            $names[] = $name_esc;
             $url = nc_build_url('author', $a['slug']);
             if ($i === 0) {
                 $first_url = $url;
-                $first_img = $a['image'] ?? '';
+                $first_img = !empty($a['image']) ? $a['image'] : '';
             }
-            $links[] = '<a href="' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '" class="nc-author-link">' . htmlspecialchars($a['name'], ENT_QUOTES, 'UTF-8') . '</a>';
+            $links[] = '<a href="' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '" class="nc-author-link">' . $name_esc . '</a>';
         }
     } else {
         $fallback_name = !empty($default_author_string) ? htmlspecialchars($default_author_string, ENT_QUOTES, 'UTF-8') : 'Admin';
@@ -466,7 +496,7 @@ function nc_render_single_post($slug) {
         foreach ($gallery_items as $item) {
             $img_url  = htmlspecialchars($item['url'], ENT_QUOTES, 'UTF-8');
             $thumb    = htmlspecialchars(!empty($item['thumb']) ? $item['thumb'] : $item['url'], ENT_QUOTES, 'UTF-8');
-            $caption  = !empty($item['caption']) ? htmlspecialchars($item['caption'], ENT_QUOTES, 'UTF-8') : '';
+            $caption  = !empty($item['caption']) ? htmlspecialchars($item['caption']) : '';
             $alt_text = !empty($caption) ? $caption : htmlspecialchars($item['name'] ?? $article['title'], ENT_QUOTES, 'UTF-8');
 
             $gallery_html .= '  <figure class="nc-gallery-item">' . "\n";
