@@ -5,15 +5,17 @@ $db = nc_get_db();
 
 // Registered template choices
 $template_options = [
-    'single'          => i18n_r('NewsCenter/TPL_SINGLE'),
-    'list_item'       => i18n_r('NewsCenter/TPL_LIST_ITEM'),
-    'home_posts'      => i18n_r('NewsCenter/TPL_HOME_POSTS'),
-    'home_item'       => i18n_r('NewsCenter/TPL_HOME_ITEM'),
-    'authors_list'    => i18n_r('NewsCenter/TPL_AUTHORS_LIST'),
-    'author_item'     => i18n_r('NewsCenter/TPL_AUTHOR_ITEM'),
-    'categories_list' => i18n_r('NewsCenter/TPL_CATEGORIES_LIST'),
-    'category_item'   => i18n_r('NewsCenter/TPL_CATEGORY_ITEM'),
-    'frontend_css'    => i18n_r('NewsCenter/TPL_FRONTEND_CSS')
+    'single'           => i18n_r('NewsCenter/TPL_SINGLE'),
+    'list_item'        => i18n_r('NewsCenter/TPL_LIST_ITEM'),
+    'home_posts'       => i18n_r('NewsCenter/TPL_HOME_POSTS'),
+    'home_item'        => i18n_r('NewsCenter/TPL_HOME_ITEM'),
+    'author_archive'   => i18n_r('NewsCenter/TPL_AUTHOR_ARCHIVE'),
+    'authors_list'     => i18n_r('NewsCenter/TPL_AUTHORS_LIST'),
+    'author_item'      => i18n_r('NewsCenter/TPL_AUTHOR_ITEM'),
+    'category_archive' => i18n_r('NewsCenter/TPL_CATEGORY_ARCHIVE'),
+    'categories_list'  => i18n_r('NewsCenter/TPL_CATEGORIES_LIST'),
+    'category_item'    => i18n_r('NewsCenter/TPL_CATEGORY_ITEM'),
+    'frontend_css'     => i18n_r('NewsCenter/TPL_FRONTEND_CSS')
 ];
 
 // Active key

@@ -55,6 +55,22 @@ if ($article['status'] === 'published' && $is_future) {
 } else {
     $current_status_label = i18n_r('NewsCenter/DRAFT');
 }
+
+// Admin language -> Autumn-Note locale (UMD build ships: en, vi, ja, zh, fr, de, es, ko)
+$nc_gs_lang   = isset($GLOBALS['LANG']) ? (string)$GLOBALS['LANG'] : 'en_US';
+$nc_an_lang   = strtolower(substr($nc_gs_lang, 0, 2));
+$nc_an_locales = ['en', 'vi', 'ja', 'zh', 'fr', 'de', 'es', 'ko'];
+if (!in_array($nc_an_lang, $nc_an_locales, true)) { $nc_an_lang = 'en'; }
+
+// Strings articles.js needs (translated server-side so JS never hardcodes English)
+$nc_js_strings = [];
+foreach ([
+    'STATUS', 'DRAFT', 'PUBLISHED', 'SCHEDULED', 'CHANGE_IMAGE', 'CHOOSE_IMAGE', 'ADD_TO_GALLERY',
+    'EDITOR_PLACEHOLDER', 'IMAGES_SELECTED', 'IMAGE_SELECTED_ONE', 'NO_IMAGES_FOUND', 'LOAD_IMAGES_FAILED',
+    'LOADING_MEDIA', 'UPLOADING', 'UPLOAD_FAILED', 'DRAG_TO_REORDER', 'REMOVE_IMAGE'
+] as $k) {
+    $nc_js_strings[$k] = i18n_r('NewsCenter/' . $k);
+}
 ?>
 
 <link rel="stylesheet" href="<?= NC_URL ?>assets/vendor/autumnnote/autumnnote.css">
@@ -273,12 +289,15 @@ if ($article['status'] === 'published' && $is_future) {
     </div>
 
     <div class="nc-modal-footer">
-      <span id="nc-selection-info" style="margin-right:auto; font-size:13px; color:var(--nc-text-muted);">0 images selected</span>
+      <span id="nc-selection-info" style="margin-right:auto; font-size:13px; color:var(--nc-text-muted);"><?= str_replace('{count}', '0', i18n_r('NewsCenter/IMAGES_SELECTED')) ?></span>
       <button type="button" class="nc-btn nc-btn-outline nc-modal-close-btn"><?= i18n_r('NewsCenter/CANCEL') ?></button>
       <button type="button" id="nc-insert-gallery-btn" class="nc-btn nc-btn-primary" disabled><?= i18n_r('NewsCenter/ADD_TO_GALLERY') ?></button>
     </div>
   </div>
 </div>
 
+<script>
+window.NC_I18N = <?= json_encode(['lang' => $nc_an_lang, 'strings' => $nc_js_strings], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?>;
+</script>
 <script src="<?= NC_URL ?>assets/vendor/autumnnote/autumnnote.umd.js"></script>
 <script src="<?= NC_URL ?>assets/js/articles.js?v=<?= NC_VERSION ?>.<?= time() ?>"></script>

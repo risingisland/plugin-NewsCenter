@@ -10,35 +10,63 @@ add_filter('content', 'nc_content_shortcode_filter');
 add_action('theme-header', 'nc_inject_frontend_css');
 
 /**
- * Stores or retrieves the active NewsCenter article for SEO and header hooks.
+ * Active context trackers
  */
 function nc_current_article($set = null) {
     static $article = null;
-    if ($set !== null) {
-        $article = $set;
-    }
+    if ($set !== null) $article = $set;
     return $article;
 }
 
-/**
- * Returns the web URL of the current article's featured image, if any.
- */
-function nc_get_current_featured_image() {
-    $article = nc_current_article();
-    if (!empty($article['featured_image'])) {
-        $img = trim($article['featured_image']);
-        if (!preg_match('#^(https?:)?//#i', $img)) {
-            global $SITEURL;
-            return rtrim($SITEURL, '/') . '/' . ltrim($img, '/');
-        }
-        return $img;
-    }
-    return '';
+function nc_current_category($set = null) {
+    static $category = null;
+    if ($set !== null) $category = $set;
+    return $category;
+}
+
+function nc_current_author($set = null) {
+    static $author = null;
+    if ($set !== null) $author = $set;
+    return $author;
 }
 
 /**
- * Clean URL Generator supporting both Fancy (pretty) URLs and standard query parameters,
- * with optional trailing slash control.
+ * Comprehensive SEO Image resolver for BetterSeo
+ */
+function nc_get_current_seo_image() {
+    global $SITEURL;
+    $site = rtrim((string)$SITEURL, '/') . '/';
+
+    // 1. Article view
+    $art = nc_current_article();
+    if (!empty($art['featured_image'])) {
+        $img = trim($art['featured_image']);
+        return preg_match('#^(https?:)?//#i', $img) ? $img : $site . ltrim($img, '/');
+    }
+
+    // 2. Category view
+    $cat = nc_current_category();
+    if (!empty($cat['image'])) {
+        $img = trim($cat['image']);
+        return preg_match('#^(https?:)?//#i', $img) ? $img : $site . ltrim($img, '/');
+    }
+
+    // 3. Author view
+    $au = nc_current_author();
+    if (!empty($au['image'])) {
+        $img = trim($au['image']);
+        return preg_match('#^(https?:)?//#i', $img) ? $img : $site . ltrim($img, '/');
+    }
+
+    return '';
+}
+
+function nc_get_current_featured_image() {
+    return nc_get_current_seo_image();
+}
+
+/**
+ * Clean URL Generator supporting Fancy URLs and query strings
  */
 function nc_build_url($type = '', $slug = '') {
     $settings = nc_get_settings();
@@ -138,9 +166,6 @@ function nc_generate_sitemap() {
     return true;
 }
 
-/**
- * Sanitize plain text strings for meta description attributes.
- */
 function nc_clean_meta_description($text, $limit = 160) {
     if (empty($text)) return '';
     $clean = strip_tags((string)$text);
@@ -153,20 +178,12 @@ function nc_clean_meta_description($text, $limit = 160) {
     return htmlspecialchars($clean, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
-/**
- * Stores active canonical URL for current request
- */
 function nc_current_canonical($set = null) {
     static $canonical = null;
-    if ($set !== null) {
-        $canonical = $set;
-    }
+    if ($set !== null) $canonical = $set;
     return $canonical;
 }
 
-/**
- * Injects user-editable Frontend CSS from SQLite into the theme <head>
- */
 function nc_inject_frontend_css() {
     static $injected = false;
     if ($injected) return;
@@ -181,9 +198,6 @@ function nc_inject_frontend_css() {
     }
 }
 
-/**
- * Helper to ensure dynamic CSS is printed even if theme lacks get_header() hook
- */
 function nc_get_frontend_css_tag() {
     static $printed = false;
     if ($printed) return '';
@@ -200,9 +214,6 @@ function nc_get_frontend_css_tag() {
     return '<style id="newscenter-frontend-css">' . "\n" . $css . "\n" . '</style>' . "\n";
 }
 
-/**
- * Output Canonical & OpenGraph head metadata
- */
 function nc_header_meta() {
     $canonical = nc_current_canonical();
     if (!empty($canonical)) {
@@ -257,10 +268,12 @@ function nc_frontend_handler() {
         }
     } elseif (isset($_GET['category']) || isset($_GET['nc_cat'])) {
         $cat_slug = nc_sanitize_slug($_GET['category'] ?? $_GET['nc_cat']);
-        $stmt = $db->prepare("SELECT name, description FROM nc_categories WHERE slug = ? LIMIT 1");
+        $stmt = $db->prepare("SELECT * FROM nc_categories WHERE slug = ? LIMIT 1");
         $stmt->execute([$cat_slug]);
         $cat = $stmt->fetch();
         if ($cat) {
+            nc_current_category($cat);
+
             $data_index->title = $cat['name'] . ' - ' . $data_index->title;
             $title = $data_index->title;
 
@@ -297,10 +310,12 @@ function nc_frontend_handler() {
         }
     } elseif (isset($_GET['author']) || isset($_GET['nc_author'])) {
         $author_slug = nc_sanitize_slug($_GET['author'] ?? $_GET['nc_author']);
-        $stmt = $db->prepare("SELECT name, bio FROM nc_authors WHERE slug = ? LIMIT 1");
+        $stmt = $db->prepare("SELECT * FROM nc_authors WHERE slug = ? LIMIT 1");
         $stmt->execute([$author_slug]);
         $author = $stmt->fetch();
         if ($author) {
+            nc_current_author($author);
+
             $data_index->title = 'Articles by ' . $author['name'] . ' - ' . $data_index->title;
             $title = $data_index->title;
 
@@ -485,7 +500,7 @@ function nc_render_single_post($slug) {
 
     $author_meta = nc_get_article_authors_data($article['id'], $article['author']);
 
-    // Local GLightbox Gallery Markup (No CDN dependencies)[cite: 1]
+    // Local GLightbox Gallery Markup[cite: 1]
     $gallery_html = '';
     $gallery_items = !empty($article['gallery']) ? json_decode($article['gallery'], true) : [];
 
@@ -549,7 +564,7 @@ function nc_render_single_post($slug) {
 }
 
 /**
- * Render archive / list view
+ * Render archive / list view with dedicated category and author header templates
  */
 function nc_render_archive_list($filter_type = 'all', $filter_val = '') {
     $db = nc_get_db();
@@ -607,19 +622,7 @@ function nc_render_archive_list($filter_type = 'all', $filter_val = '') {
     $t_stmt->execute();
     $item_template = $t_stmt->fetchColumn();
 
-    $output = '<div class="nc-news-feed">';
-
-    if ($filter_type === 'search') {
-        $output .= '<div class="nc-filter-heading"><h3>' . i18n_r('NewsCenter/SEARCH_RESULTS_FOR') . ' <em>"' . htmlspecialchars($filter_val, ENT_QUOTES, 'UTF-8') . '"</em></h3></div>';
-    } elseif ($filter_type === 'author') {
-        $stmt_au = $db->prepare("SELECT name FROM nc_authors WHERE slug = ? LIMIT 1");
-        $stmt_au->execute([$filter_val]);
-        $author_name = $stmt_au->fetchColumn() ?: $filter_val;
-        $output .= '<div class="nc-filter-heading"><h3>Articles by <em>' . htmlspecialchars($author_name, ENT_QUOTES, 'UTF-8') . '</em></h3></div>';
-    } elseif ($filter_type === 'category' || $filter_type === 'tag' || $filter_type === 'archive') {
-        $output .= '<div class="nc-filter-heading"><h3>' . ucfirst($filter_type) . ': <em>' . htmlspecialchars($filter_val, ENT_QUOTES, 'UTF-8') . '</em></h3></div>';
-    }
-
+    $rendered_cards = '';
     if (!empty($articles)) {
         foreach ($articles as $art) {
             $excerpt = !empty($art['excerpt']) ? $art['excerpt'] : substr(strip_tags($art['content']), 0, $excerpt_len) . '...';
@@ -639,24 +642,96 @@ function nc_render_archive_list($filter_type = 'all', $filter_val = '') {
                 'article.has_image'        => !empty($art['featured_image']),
                 'news.url'                 => $news_url
             ];
-            $output .= nc_render_template($item_template, $vars);
+            $rendered_cards .= nc_render_template($item_template, $vars);
         }
 
         if ($total_pages > 1) {
-            $output .= '<nav class="nc-frontend-pagination">';
+            $rendered_cards .= '<nav class="nc-frontend-pagination">';
             $curr_params = $_GET;
             for ($i = 1; $i <= $total_pages; $i++) {
                 $curr_params['page'] = $i;
                 $link = '?' . http_build_query($curr_params);
                 $active_cls = ($i === $page) ? ' class="active"' : '';
-                $output .= '<a href="' . htmlspecialchars($link, ENT_QUOTES, 'UTF-8') . '"' . $active_cls . '>' . $i . '</a> ';
+                $rendered_cards .= '<a href="' . htmlspecialchars($link, ENT_QUOTES, 'UTF-8') . '"' . $active_cls . '>' . $i . '</a> ';
             }
-            $output .= '</nav>';
+            $rendered_cards .= '</nav>';
         }
     } else {
-        $output .= '<p class="nc-no-results">' . i18n_r('NewsCenter/NO_ARTICLES_FOUND') . '</p>';
+        $rendered_cards .= '<p class="nc-no-results">' . i18n_r('NewsCenter/NO_ARTICLES_FOUND') . '</p>';
     }
 
+    // 1. Category view rendering
+    if ($filter_type === 'category') {
+        $cat = nc_current_category();
+        if (!$cat) {
+            $cat_stmt = $db->prepare("SELECT * FROM nc_categories WHERE slug = ? LIMIT 1");
+            $cat_stmt->execute([$filter_val]);
+            $cat = $cat_stmt->fetch();
+        }
+
+        $c_tpl = $db->query("SELECT content FROM nc_templates WHERE template_key = 'category_archive' LIMIT 1")->fetchColumn();
+        if (!$c_tpl) {
+            nc_reset_default_templates();
+            $c_tpl = $db->query("SELECT content FROM nc_templates WHERE template_key = 'category_archive' LIMIT 1")->fetchColumn();
+        }
+
+        $cat_desc = !empty($cat['description']) ? trim($cat['description']) : '';
+        $cat_img  = !empty($cat['image']) ? trim($cat['image']) : '';
+
+        $c_vars = [
+            'category.name'            => htmlspecialchars($cat['name'] ?? $filter_val, ENT_QUOTES, 'UTF-8'),
+            'category.slug'            => htmlspecialchars($filter_val, ENT_QUOTES, 'UTF-8'),
+            'category.description'     => nl2br(htmlspecialchars($cat_desc, ENT_QUOTES, 'UTF-8')),
+            'category.has_description' => !empty($cat_desc),
+            'category.image'           => htmlspecialchars($cat_img, ENT_QUOTES, 'UTF-8'),
+            'category.has_image'       => !empty($cat_img),
+            'category.url'             => htmlspecialchars(nc_build_url('category', $filter_val), ENT_QUOTES, 'UTF-8'),
+            'articles.list'            => $rendered_cards,
+            'news.url'                 => $news_url
+        ];
+        return nc_render_template($c_tpl, $c_vars);
+    }
+
+    // 2. Author view rendering
+    if ($filter_type === 'author') {
+        $author = nc_current_author();
+        if (!$author) {
+            $au_stmt = $db->prepare("SELECT * FROM nc_authors WHERE slug = ? LIMIT 1");
+            $au_stmt->execute([$filter_val]);
+            $author = $au_stmt->fetch();
+        }
+
+        $a_tpl = $db->query("SELECT content FROM nc_templates WHERE template_key = 'author_archive' LIMIT 1")->fetchColumn();
+        if (!$a_tpl) {
+            nc_reset_default_templates();
+            $a_tpl = $db->query("SELECT content FROM nc_templates WHERE template_key = 'author_archive' LIMIT 1")->fetchColumn();
+        }
+
+        $author_bio = !empty($author['bio']) ? trim($author['bio']) : '';
+        $author_img = !empty($author['image']) ? trim($author['image']) : '';
+
+        $a_vars = [
+            'author.name'      => htmlspecialchars($author['name'] ?? $filter_val, ENT_QUOTES, 'UTF-8'),
+            'author.slug'      => htmlspecialchars($filter_val, ENT_QUOTES, 'UTF-8'),
+            'author.bio'       => nl2br(htmlspecialchars($author_bio, ENT_QUOTES, 'UTF-8')),
+            'author.has_bio'   => !empty($author_bio),
+            'author.image'     => htmlspecialchars($author_img, ENT_QUOTES, 'UTF-8'),
+            'author.has_image' => !empty($author_img),
+            'author.url'       => htmlspecialchars(nc_build_url('author', $filter_val), ENT_QUOTES, 'UTF-8'),
+            'articles.list'    => $rendered_cards,
+            'news.url'         => $news_url
+        ];
+        return nc_render_template($a_tpl, $a_vars);
+    }
+
+    // 3. Fallback for search, tag, archive month, and general feed
+    $output = '<div class="nc-news-feed">';
+    if ($filter_type === 'search') {
+        $output .= '<div class="nc-filter-heading"><h3>' . i18n_r('NewsCenter/SEARCH_RESULTS_FOR') . ' <em>"' . htmlspecialchars($filter_val, ENT_QUOTES, 'UTF-8') . '"</em></h3></div>';
+    } elseif ($filter_type === 'tag' || $filter_type === 'archive') {
+        $output .= '<div class="nc-filter-heading"><h3>' . ucfirst($filter_type) . ': <em>' . htmlspecialchars($filter_val, ENT_QUOTES, 'UTF-8') . '</em></h3></div>';
+    }
+    $output .= $rendered_cards;
     $output .= '</div>';
     return $output;
 }

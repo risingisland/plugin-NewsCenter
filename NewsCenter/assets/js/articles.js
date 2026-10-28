@@ -4,6 +4,11 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Admin-language data injected by edit-article.php (window.NC_I18N)
+    const I18N = window.NC_I18N || {};
+    const t = (key, fallback) => (I18N.strings && I18N.strings[key]) || fallback;
+    const tAttr = (key, fallback) => t(key, fallback).replace(/"/g, '&quot;');
+
     const rawContentEl = document.getElementById('nc-article-content');
     const form = document.getElementById('nc-article-form');
     const galleryDataInput = document.getElementById('nc-gallery-data');
@@ -108,7 +113,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const AN = window.AutumnNote || window.autumnnote;
 
     const baseOptions = {
-        placeholder: 'Write your article content here...',
+        lang: I18N.lang || 'en',   // Autumn-Note UMD build has en, vi, ja, zh, fr, de, es, ko built in
+        placeholder: t('EDITOR_PLACEHOLDER', 'Write your article content here...'),
         minHeight: 380,
         resizable: true,
 
@@ -173,14 +179,14 @@ document.addEventListener('DOMContentLoaded', () => {
             featuredThumbImg.style.display = 'block';
             if (featuredPlaceholder) featuredPlaceholder.style.display = 'none';
             if (featuredRemoveBtn) featuredRemoveBtn.style.display = 'block';
-            if (selectFeaturedBtn) selectFeaturedBtn.textContent = 'Change Image';
+            if (selectFeaturedBtn) selectFeaturedBtn.textContent = t('CHANGE_IMAGE', 'Change Image');
         } else {
             featuredInput.value = '';
             featuredThumbImg.src = '';
             featuredThumbImg.style.display = 'none';
             if (featuredPlaceholder) featuredPlaceholder.style.display = 'flex';
             if (featuredRemoveBtn) featuredRemoveBtn.style.display = 'none';
-            if (selectFeaturedBtn) selectFeaturedBtn.textContent = 'Choose Image';
+            if (selectFeaturedBtn) selectFeaturedBtn.textContent = t('CHOOSE_IMAGE', 'Choose Image');
         }
     };
 
@@ -228,8 +234,8 @@ document.addEventListener('DOMContentLoaded', () => {
             card.innerHTML = `
               <div class="nc-gallery-card-thumb">
                 <img src="${item.thumb || item.url}" alt="${item.name || ''}" draggable="false">
-                <span class="nc-drag-badge" title="Drag to reorder">&#9776;</span>
-                <button type="button" class="nc-gallery-card-close" title="Remove image">&times;</button>
+                <span class="nc-drag-badge" title="${tAttr('DRAG_TO_REORDER', 'Drag to reorder')}">&#9776;</span>
+                <button type="button" class="nc-gallery-card-close" title="${tAttr('REMOVE_IMAGE', 'Remove image')}">&times;</button>
               </div>
               <input type="text" class="nc-gallery-card-caption" placeholder="Caption (optional)" value="${item.caption ? String(item.caption).replace(/"/g, '&quot;') : ''}">
             `;
@@ -398,6 +404,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const pubDateInput = document.getElementById('nc-published-at-input');
     const stickyStatusText = document.getElementById('nc-bar-status-text');
 
+    const statusPrefix = t('STATUS', 'Status') + ': ';
+
     function refreshStickyStatus() {
         if (!statusSelect || !stickyStatusText) return;
         const currentVal = statusSelect.value;
@@ -406,12 +414,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const pubTime = pubDateInput && pubDateInput.value ? new Date(pubDateInput.value).getTime() : 0;
             const nowTime = Date.now();
             if (pubTime > nowTime) {
-                stickyStatusText.textContent = 'Status: Scheduled';
+                stickyStatusText.textContent = statusPrefix + t('SCHEDULED', 'Scheduled');
                 return;
             }
-            stickyStatusText.textContent = 'Status: Published';
+            stickyStatusText.textContent = statusPrefix + t('PUBLISHED', 'Published');
         } else {
-            stickyStatusText.textContent = 'Status: Draft';
+            stickyStatusText.textContent = statusPrefix + t('DRAFT', 'Draft');
         }
     }
 
@@ -441,10 +449,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const count = selectedImages.size;
         if (insertBtn) {
             insertBtn.disabled = (count === 0);
-            insertBtn.textContent = count > 1 ? `Add to Gallery (${count})` : 'Add to Gallery';
+            insertBtn.textContent = count > 1 ? `${t('ADD_TO_GALLERY', 'Add to Gallery')} (${count})` : t('ADD_TO_GALLERY', 'Add to Gallery');
         }
         if (selectionInfo) {
-            selectionInfo.textContent = count === 1 ? '1 image selected' : `${count} images selected`;
+            selectionInfo.textContent = count === 1
+                ? t('IMAGE_SELECTED_ONE', '1 image selected')
+                : t('IMAGES_SELECTED', '{count} images selected').replace('{count}', count);
         }
     }
 
@@ -500,7 +510,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderGrid(files) {
         fileListContainer.innerHTML = '';
         if (!files || files.length === 0) {
-            fileListContainer.innerHTML = '<p style="text-align:center; padding:30px; color:#64748b;">No images found in uploads.</p>';
+            fileListContainer.innerHTML = '<p style="text-align:center; padding:30px; color:#64748b;">' + t('NO_IMAGES_FOUND', 'No images found in uploads.') + '</p>';
             return;
         }
 
@@ -543,7 +553,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function loadMedia() {
-        fileListContainer.innerHTML = '<p style="text-align:center; padding:30px;">Loading uploads...</p>';
+        fileListContainer.innerHTML = '<p style="text-align:center; padding:30px;">' + t('LOADING_MEDIA', 'Loading uploads...') + '</p>';
         fetch('load.php?id=NewsCenter&action=ajax_media', { credentials: 'same-origin' })
             .then(res => res.json())
             .then(data => {
@@ -551,7 +561,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderGrid(allMediaFiles);
             })
             .catch(err => {
-                fileListContainer.innerHTML = '<p style="color:red; padding:20px;">Failed to load images: ' + err.message + '</p>';
+                fileListContainer.innerHTML = '<p style="color:red; padding:20px;">' + t('LOAD_IMAGES_FAILED', 'Failed to load images:') + ' ' + err.message + '</p>';
             });
     }
 
@@ -582,7 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     fd.append('file[]', fileInput.files[i]);
                 }
 
-                uploadStatus.innerHTML = '<p>Uploading...</p>';
+                uploadStatus.innerHTML = '<p>' + t('UPLOADING', 'Uploading...') + '</p>';
                 fetch('load.php?id=NewsCenter&action=ajax_upload', { method: 'POST', body: fd })
                     .then(r => r.json())
                     .then(res => {
@@ -598,7 +608,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             }
                             uploadStatus.innerHTML = '';
                         } else {
-                            uploadStatus.innerHTML = '<p style="color:red;">Upload failed.</p>';
+                            uploadStatus.innerHTML = '<p style="color:red;">' + t('UPLOAD_FAILED', 'Upload failed.') + '</p>';
                         }
                     });
             }

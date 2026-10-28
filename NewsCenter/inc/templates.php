@@ -52,6 +52,44 @@ if (!function_exists('nc_reset_default_templates')) {
   </div>
 </article>'
             ],
+            'category_archive' => [
+                'title'   => 'Category Archive View Template',
+                'content' => '<header class="nc-archive-header nc-category-header">
+  {{if:category.has_image}}
+  <div class="nc-archive-banner">
+    <img src="{{category.image}}" alt="{{category.name}}" class="nc-category-cover">
+  </div>
+  {{/if:category.has_image}}
+  <div class="nc-archive-info">
+    <h1 class="nc-archive-title">{{category.name}}</h1>
+    {{if:category.has_description}}
+    <div class="nc-archive-desc">{{category.description}}</div>
+    {{/if:category.has_description}}
+  </div>
+</header>
+<div class="nc-news-feed">
+  {{articles.list}}
+</div>'
+            ],
+            'author_archive' => [
+                'title'   => 'Author Archive View Template',
+                'content' => '<header class="nc-archive-header nc-author-header">
+  {{if:author.has_image}}
+  <div class="nc-author-avatar-wrap">
+    <img src="{{author.image}}" alt="{{author.name}}" class="nc-author-avatar-large">
+  </div>
+  {{/if:author.has_image}}
+  <div class="nc-archive-info">
+    <h1 class="nc-archive-title">Articles by {{author.name}}</h1>
+    {{if:author.has_bio}}
+    <div class="nc-author-bio-full">{{author.bio}}</div>
+    {{/if:author.has_bio}}
+  </div>
+</header>
+<div class="nc-news-feed">
+  {{articles.list}}
+</div>'
+            ],
             'home_posts' => [
                 'title'   => 'Home Page Posts Grid Container',
                 'content' => '<section class="nc-home-news-section">
@@ -158,6 +196,14 @@ if (!function_exists('nc_reset_default_templates')) {
 .nc-authors a:hover { color: #2563eb; text-decoration: underline; }
 .nc-excerpt { font-size: 14px; line-height: 1.6; color: #475569; margin-bottom: 15px; flex-grow: 1; }
 .nc-read-more { font-size: 13px; color: #2563eb; text-decoration: none; font-weight: 600; }
+
+/* Archive Headers */
+.nc-archive-header { display: flex; flex-direction: column; gap: 16px; margin: 20px 0 30px; padding-bottom: 20px; border-bottom: 2px solid #e2e8f0; }
+.nc-author-header { flex-direction: row; align-items: center; gap: 24px; }
+.nc-archive-banner img { width: 100%; max-height: 260px; object-fit: cover; border-radius: 8px; display: block; }
+.nc-author-avatar-large { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; display: block; border: 3px solid #e2e8f0; }
+.nc-archive-title { margin: 0 0 8px; font-size: 28px; color: #0f172a; }
+.nc-archive-desc, .nc-author-bio-full { font-size: 15px; color: #475569; line-height: 1.6; }
 
 /* Article Single */
 .nc-article-single { margin: 20px 0; }
