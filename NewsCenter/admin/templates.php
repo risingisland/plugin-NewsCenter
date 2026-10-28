@@ -52,7 +52,7 @@ $is_css = ($active_key === 'frontend_css');
       <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=templates&do=delete&restore_template=1&key=<?= urlencode($active_key) ?>&nc_csrf=<?= nc_csrf_token() ?>" 
          class="nc-btn nc-btn-danger" 
          onclick="return confirm('<?= i18n_r('NewsCenter/CONFIRM_RESTORE') ?>');">
-        &#8634; <?= i18n_r('NewsCenter/RESTORE_DEFAULT') ?>
+        <?= $svgRefresh ?> <?= i18n_r('NewsCenter/RESTORE_DEFAULT') ?>
       </a>
     </div>
   </div>
@@ -76,7 +76,7 @@ $is_css = ($active_key === 'frontend_css');
       </div>
 
       <div class="nc-actions-bar" style="margin-top:15px;">
-        <button type="submit" class="nc-btn nc-btn-primary nc-btn-save">&#128190; <?= i18n_r('NewsCenter/SAVE_TEMPLATE') ?></button>
+        <button type="submit" class="nc-btn nc-btn-primary nc-btn-save"> <?= i18n_r('NewsCenter/SAVE_TEMPLATE') ?></button>
       </div>
     </form>
   </div>

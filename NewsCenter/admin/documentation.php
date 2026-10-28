@@ -93,7 +93,7 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
     <div class="nc-code-wrapper">
       <div class="nc-code-header">
         <span>Shortcode</span>
-        <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)">📋 Copy</button>
+        <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)"><?= $svgCopy ?> Copy</button>
       </div>
       <pre><code>[get-newscenter-recent limit=3]</code></pre>
     </div>
@@ -102,7 +102,7 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
     <div class="nc-code-wrapper">
       <div class="nc-code-header">
         <span>Filtered Shortcode</span>
-        <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)">📋 Copy</button>
+        <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)"><?= $svgCopy ?> Copy</button>
       </div>
       <pre><code>[get-newscenter-recent limit=3 category="featured" author="john-doe"]</code></pre>
     </div>
@@ -113,7 +113,7 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
     <div class="nc-code-wrapper">
       <div class="nc-code-header">
         <span>PHP Theme Hook</span>
-        <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)">📋 Copy</button>
+        <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)"><?= $svgCopy ?> Copy</button>
       </div>
       <pre><code>&lt;?php if (function_exists('nc_show_recent_posts')) { nc_show_recent_posts(3); } ?&gt;</code></pre>
     </div>
@@ -122,7 +122,7 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
     <div class="nc-code-wrapper">
       <div class="nc-code-header">
         <span>Parameterized PHP Hook</span>
-        <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)">📋 Copy</button>
+        <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)"><?= $svgCopy ?> Copy</button>
       </div>
       <pre><code>&lt;?php if (function_exists('nc_show_recent_posts')) { nc_show_recent_posts(3, 'announcements', 'Company Updates', 'john-doe'); } ?&gt;</code></pre>
     </div>
@@ -137,7 +137,7 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
     <div class="nc-code-wrapper">
       <div class="nc-code-header">
         <span>Authors Shortcode</span>
-        <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)">📋 Copy</button>
+        <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)"><?= $svgCopy ?> Copy</button>
       </div>
       <pre><code>[get-newscenter-authors]</code></pre>
     </div>
@@ -146,7 +146,7 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
     <div class="nc-code-wrapper">
       <div class="nc-code-header">
         <span>Authors PHP Hook</span>
-        <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)">📋 Copy</button>
+        <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)"><?= $svgCopy ?> Copy</button>
       </div>
       <pre><code>&lt;?php if (function_exists('nc_show_authors')) { nc_show_authors(); } ?&gt;</code></pre>
     </div>
@@ -161,7 +161,7 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
     <div class="nc-code-wrapper">
       <div class="nc-code-header">
         <span>Categories Shortcode</span>
-        <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)">📋 Copy</button>
+        <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)"><?= $svgCopy ?> Copy</button>
       </div>
       <pre><code>[get-newscenter-categories]</code></pre>
     </div>
@@ -170,7 +170,7 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
     <div class="nc-code-wrapper">
       <div class="nc-code-header">
         <span>Categories PHP Hook</span>
-        <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)">📋 Copy</button>
+        <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)"><?= $svgCopy ?> Copy</button>
       </div>
       <pre><code>&lt;?php if (function_exists('nc_show_categories')) { nc_show_categories(); } ?&gt;</code></pre>
     </div>
@@ -185,7 +185,7 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
     <div class="nc-code-wrapper">
       <div class="nc-code-header">
         <span>Recent Posts List</span>
-        <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)">📋 Copy</button>
+        <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)"><?= $svgCopy ?> Copy</button>
       </div>
       <pre><code>&lt;?php if (function_exists('nc_show_recent_posts_list')) { nc_show_recent_posts_list(5); } ?&gt;</code></pre>
     </div>
@@ -194,7 +194,7 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
     <div class="nc-code-wrapper">
       <div class="nc-code-header">
         <span>Monthly Archives List</span>
-        <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)">📋 Copy</button>
+        <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)"><?= $svgCopy ?> Copy</button>
       </div>
       <pre><code>&lt;?php if (function_exists('nc_show_archives')) { nc_show_archives(); } ?&gt;</code></pre>
     </div>
@@ -381,7 +381,7 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
     <div class="nc-code-wrapper">
       <div class="nc-code-header">
         <span>Image &amp; Bio Conditionals Example</span>
-        <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)">📋 Copy</button>
+        <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)"><?= $svgCopy ?> Copy</button>
       </div>
       <pre><code>{{if:article.has_image}}
   &lt;div class="featured-img"&gt;&lt;img src="{{article.featured_image}}" alt="{{article.title}}"&gt;&lt;/div&gt;

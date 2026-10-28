@@ -45,7 +45,7 @@ $cat_img = $edit_category ? ($edit_category['image'] ?? '') : '';
                   <?php if (!empty($cat['image'])): ?>
                     <img src="<?= htmlspecialchars($cat['image']) ?>" alt="" style="width:36px; height:36px; border-radius:4px; object-fit:cover; display:block;">
                   <?php else: ?>
-                    <div style="width:36px; height:36px; border-radius:4px; background:#e2e8f0; display:flex; align-items:center; justify-content:center; font-size:11px; color:#64748b;">📁</div>
+                    <div style="width:36px; height:36px; border-radius:4px; background:#e2e8f0; display:flex; align-items:center; justify-content:center; font-size:11px; color:#64748b;"><?= $svgFolder ?></div>
                   <?php endif; ?>
                 </td>
                 <td>
@@ -59,11 +59,11 @@ $cat_img = $edit_category ? ($edit_category['image'] ?? '') : '';
                   <span class="nc-badge-pill"><?= (int)$cat['article_count'] ?></span>
                 </td>
                 <td class="nc-text-right nc-actions-cell">
-                  <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=categories&edit_id=<?= (int)$cat['id'] ?>" class="nc-btn-action" title="<?= i18n_r('NewsCenter/EDIT') ?>">&#9998;</a>
+                  <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=categories&edit_id=<?= (int)$cat['id'] ?>" class="nc-btn-action" title="<?= i18n_r('NewsCenter/EDIT') ?>"><?= $svgEdit ?></a>
                   <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=categories&do=delete&category_id=<?= (int)$cat['id'] ?>&nc_csrf=<?= nc_csrf_token() ?>" 
                      class="nc-btn-action nc-btn-action-delete" 
                      title="<?= i18n_r('NewsCenter/DELETE') ?>"
-                     onclick="return confirm('<?= i18n_r('NewsCenter/CONFIRM_DELETE_CAT') ?>');">&#128465;</a>
+                     onclick="return confirm('<?= i18n_r('NewsCenter/CONFIRM_DELETE_CAT') ?>');"><?= $svgDelete ?></a>
                 </td>
               </tr>
             <?php endforeach; ?>

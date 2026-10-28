@@ -46,11 +46,11 @@ $tags = nc_get_tags_with_counts();
                   <span class="nc-badge-pill"><?= (int)$t['article_count'] ?></span>
                 </td>
                 <td class="nc-text-right nc-actions-cell">
-                  <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=tags&edit_id=<?= (int)$t['id'] ?>" class="nc-btn-action" title="<?= i18n_r('NewsCenter/EDIT') ?>">&#9998;</a>
+                  <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=tags&edit_id=<?= (int)$t['id'] ?>" class="nc-btn-action" title="<?= i18n_r('NewsCenter/EDIT') ?>"><?= $svgEdit ?></a>
                   <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=tags&do=delete&tag_id=<?= (int)$t['id'] ?>&nc_csrf=<?= nc_csrf_token() ?>" 
                      class="nc-btn-action nc-btn-action-delete" 
                      title="<?= i18n_r('NewsCenter/DELETE') ?>" 
-                     onclick="return confirm('<?= i18n_r('NewsCenter/CONFIRM_DELETE_TAG') ?>');">&#128465;</a>
+                     onclick="return confirm('<?= i18n_r('NewsCenter/CONFIRM_DELETE_TAG') ?>');"><?= $svgDelete ?></a>
                 </td>
               </tr>
             <?php endforeach; ?>

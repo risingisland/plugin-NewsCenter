@@ -45,7 +45,7 @@ $author_img = $edit_author ? ($edit_author['image'] ?? '') : '';
                   <?php if (!empty($au['image'])): ?>
                     <img src="<?= htmlspecialchars($au['image']) ?>" alt="" style="width:36px; height:36px; border-radius:50%; object-fit:cover; display:block;">
                   <?php else: ?>
-                    <div style="width:36px; height:36px; border-radius:50%; background:#e2e8f0; display:flex; align-items:center; justify-content:center; font-size:11px; color:#64748b;">👤</div>
+                    <div style="width:36px; height:36px; border-radius:50%; background:#e2e8f0; display:flex; align-items:center; justify-content:center; font-size:11px; color:#64748b;"><?= $svgUser ?></div>
                   <?php endif; ?>
                 </td>
                 <td>
@@ -59,11 +59,11 @@ $author_img = $edit_author ? ($edit_author['image'] ?? '') : '';
                   <span class="nc-badge-pill"><?= (int)$au['article_count'] ?></span>
                 </td>
                 <td class="nc-text-right nc-actions-cell">
-                  <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=authors&edit_id=<?= (int)$au['id'] ?>" class="nc-btn-action" title="<?= i18n_r('NewsCenter/EDIT') ?>">&#9998;</a>
+                  <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=authors&edit_id=<?= (int)$au['id'] ?>" class="nc-btn-action" title="<?= i18n_r('NewsCenter/EDIT') ?>"><?= $svgEdit ?></a>
                   <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=authors&do=delete&author_id=<?= (int)$au['id'] ?>&nc_csrf=<?= nc_csrf_token() ?>" 
                      class="nc-btn-action nc-btn-action-delete" 
                      title="<?= i18n_r('NewsCenter/DELETE') ?>"
-                     onclick="return confirm('<?= i18n_r('NewsCenter/CONFIRM_DELETE_AUTHOR') ?>');">&#128465;</a>
+                     onclick="return confirm('<?= i18n_r('NewsCenter/CONFIRM_DELETE_AUTHOR') ?>');"><?= $svgDelete ?></a>
                 </td>
               </tr>
             <?php endforeach; ?>

@@ -91,7 +91,7 @@ $date_format = !empty($settings['date_format']) ? $settings['date_format'] : 'M 
                     <?= htmlspecialchars($art['title']) ?>
                   </a>
                   <?php if ($has_gallery): ?>
-                    <span class="nc-gallery-indicator" title="<?= i18n_r('NewsCenter/GALLERY') ?>: <?= count($gallery_items) ?>">📷 <?= count($gallery_items) ?></span>
+                    <span class="nc-gallery-indicator" title="<?= i18n_r('NewsCenter/GALLERY') ?>: <?= count($gallery_items) ?>"> <?= $svgImg . count($gallery_items) ?></span>
                   <?php endif; ?>
                 </div>
                 <!--div class="nc-subtext">/<?= htmlspecialchars($art['slug']) ?></div-->
@@ -106,7 +106,7 @@ $date_format = !empty($settings['date_format']) ? $settings['date_format'] : 'M 
               </td>
               <td><?= date($date_format, strtotime($art['published_at'])) ?></td>
               <td class="nc-text-right nc-actions-cell">
-                <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=edit-article&article_id=<?= (int)$art['id'] ?>" class="nc-btn-action" title="<?= i18n_r('NewsCenter/EDIT') ?>">&#9998;</a>
+                <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=edit-article&article_id=<?= (int)$art['id'] ?>" class="nc-btn-action" title="<?= i18n_r('NewsCenter/EDIT') ?>"><?= $svgEdit ?></a>
               </td>
             </tr>
           <?php endforeach; ?>

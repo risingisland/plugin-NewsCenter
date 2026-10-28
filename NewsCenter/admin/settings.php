@@ -106,7 +106,7 @@ if ($page_files) {
       <h3 style="margin:0;"><?= i18n_r('NewsCenter/SITEMAP_MAINTENANCE') ?></h3>
       <form action="load.php?id=<?= NC_PLUGIN_ID ?>&action=rebuild_sitemap" method="POST" style="margin:0;">
         <input type="hidden" name="nc_csrf" value="<?= nc_csrf_token() ?>">
-        <button type="submit" class="nc-btn nc-btn-small nc-btn-secondary">&#8634; <?= i18n_r('NewsCenter/REBUILD_SITEMAP_NOW') ?></button>
+        <button type="submit" class="nc-btn nc-btn-small nc-btn-secondary"><?= $svgRefresh ?> <?= i18n_r('NewsCenter/REBUILD_SITEMAP_NOW') ?></button>
       </form>
     </div>
     <p style="font-size:13px; color:var(--nc-text-muted); margin:0;">
@@ -118,7 +118,7 @@ if ($page_files) {
   <div class="nc-card" style="margin-top:25px;">
     <div class="nc-card-header" style="display:flex; justify-content:space-between; align-items:center;">
       <h3 style="margin:0;"><?= i18n_r('NewsCenter/HTACCESS_RULES') ?></h3>
-      <button type="button" class="nc-btn nc-btn-small nc-btn-primary" id="nc-copy-rules-btn" onclick="ncCopyHtaccess()">📋 <?= i18n_r('NewsCenter/COPY_RULES') ?></button>
+      <button type="button" class="nc-btn nc-btn-small nc-btn-primary" id="nc-copy-rules-btn" onclick="ncCopyHtaccess()"><?= $svgCopy ?> <?= i18n_r('NewsCenter/COPY_RULES') ?></button>
     </div>
     <p style="font-size:13px; color:var(--nc-text-muted); margin:0 0 12px 0;">
       <?= i18n_r('NewsCenter/HTACCESS_HELP') ?>

@@ -251,7 +251,7 @@ foreach ([
     <!-- Floating Sticky Bottom Bar for Save Button -->
     <div class="nc-sticky-save-bar" id="nc-sticky-bar">
       <span class="nc-status-indicator" id="nc-bar-status-text"><?= i18n_r('NewsCenter/STATUS') ?>: <?= $current_status_label ?></span>
-      <button type="submit" class="nc-btn nc-btn-primary nc-btn-save" style="padding:10px 24px; font-size:14px;">&#128190; <?= i18n_r('NewsCenter/SAVE_ARTICLE') ?></button>
+      <button type="submit" class="nc-btn nc-btn-primary nc-btn-save" style="padding:10px 24px; font-size:14px;"><?= $svgSave ?> <?= i18n_r('NewsCenter/SAVE_ARTICLE') ?></button>
     </div>
   </form>
 </div>
