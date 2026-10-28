@@ -78,17 +78,17 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
 
 <div class="nc-container">
   <div class="nc-page-header" style="margin-bottom:20px;">
-    <h2>NewsCenter Documentation &amp; Integration Guide</h2>
-    <p style="color:var(--nc-text-muted); margin:4px 0 0 0;">Integration tags, theme PHP hooks, shortcode references, and template engine placeholders for GetSimple CMS CE.</p>
+    <h2><?= i18n_r('NewsCenter/DOCS_TITLE') ?></h2>
+    <p style="color:var(--nc-text-muted); margin:4px 0 0 0;"><?= i18n_r('NewsCenter/DOCS_SUBTITLE') ?></p>
   </div>
 
   <!-- 1. Homepage Integration (Shortcodes & PHP) -->
   <div class="nc-doc-card">
-    <h3>1. Homepage &amp; Custom Page Integration (Latest Posts)</h3>
-    <p>Display your latest news stories with responsive cards and grid containers on your homepage or landing pages.</p>
+    <h3><?= i18n_r('NewsCenter/DOCS_SEC_HOME') ?></h3>
+    <p><?= i18n_r('NewsCenter/DOCS_SEC_HOME_DESC') ?></p>
 
-    <h4>Option A: Page Content Shortcode</h4>
-    <p>Paste this shortcode anywhere inside a regular page content editor (e.g. <strong>Pages &rarr; Edit &rarr; index</strong>):</p>
+    <h4><?= i18n_r('NewsCenter/DOCS_OPT_A_SHORTCODE') ?></h4>
+    <p><?= i18n_r('NewsCenter/DOCS_OPT_A_DESC') ?></p>
     
     <div class="nc-code-wrapper">
       <div class="nc-code-header">
@@ -98,7 +98,7 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
       <pre><code>[get-newscenter-recent limit=3]</code></pre>
     </div>
 
-    <p>Filter by category or author slug:</p>
+    <p><?= i18n_r('NewsCenter/DOCS_SHORTCODE_FILTER') ?></p>
     <div class="nc-code-wrapper">
       <div class="nc-code-header">
         <span>Filtered Shortcode</span>
@@ -107,8 +107,8 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
       <pre><code>[get-newscenter-recent limit=3 category="featured" author="john-doe"]</code></pre>
     </div>
 
-    <h4>Option B: Theme PHP Hook (template.php)</h4>
-    <p>Call the function directly inside your theme's <code>template.php</code>:</p>
+    <h4><?= i18n_r('NewsCenter/DOCS_OPT_B_PHP') ?></h4>
+    <p><?= i18n_r('NewsCenter/DOCS_OPT_B_DESC') ?></p>
     
     <div class="nc-code-wrapper">
       <div class="nc-code-header">
@@ -118,7 +118,7 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
       <pre><code>&lt;?php if (function_exists('nc_show_recent_posts')) { nc_show_recent_posts(3); } ?&gt;</code></pre>
     </div>
 
-    <p>With optional category, custom heading, and author filter parameters:</p>
+    <p><?= i18n_r('NewsCenter/DOCS_OPT_B_PARAMS') ?></p>
     <div class="nc-code-wrapper">
       <div class="nc-code-header">
         <span>Parameterized PHP Hook</span>
@@ -130,10 +130,10 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
 
   <!-- 2. Authors Directory Integration -->
   <div class="nc-doc-card">
-    <h3>2. Authors Directory (Avatars, Bios &amp; Archives)</h3>
-    <p>Display your contributors in a responsive grid showing their avatar/photo, biographical summary, article counts, and individual archive links.</p>
+    <h3><?= i18n_r('NewsCenter/DOCS_SEC_AUTHORS') ?></h3>
+    <p><?= i18n_r('NewsCenter/DOCS_SEC_AUTHORS_DESC') ?></p>
 
-    <h4>Option A: Page Content Shortcode</h4>
+    <h4><?= i18n_r('NewsCenter/DOCS_OPT_A_SHORTCODE') ?></h4>
     <div class="nc-code-wrapper">
       <div class="nc-code-header">
         <span>Authors Shortcode</span>
@@ -142,7 +142,7 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
       <pre><code>[get-newscenter-authors]</code></pre>
     </div>
 
-    <h4>Option B: Theme PHP Hook</h4>
+    <h4><?= i18n_r('NewsCenter/DOCS_OPT_B_PHP') ?></h4>
     <div class="nc-code-wrapper">
       <div class="nc-code-header">
         <span>Authors PHP Hook</span>
@@ -154,10 +154,10 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
 
   <!-- 3. Categories Directory Integration -->
   <div class="nc-doc-card">
-    <h3>3. Categories Directory (Banners, Descriptions &amp; Archives)</h3>
-    <p>Display all taxonomy categories in a card grid showing category banner images, descriptions, post counts, and links.</p>
+    <h3><?= i18n_r('NewsCenter/DOCS_SEC_CATS') ?></h3>
+    <p><?= i18n_r('NewsCenter/DOCS_SEC_CATS_DESC') ?></p>
 
-    <h4>Option A: Page Content Shortcode</h4>
+    <h4><?= i18n_r('NewsCenter/DOCS_OPT_A_SHORTCODE') ?></h4>
     <div class="nc-code-wrapper">
       <div class="nc-code-header">
         <span>Categories Shortcode</span>
@@ -166,7 +166,7 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
       <pre><code>[get-newscenter-categories]</code></pre>
     </div>
 
-    <h4>Option B: Theme PHP Hook</h4>
+    <h4><?= i18n_r('NewsCenter/DOCS_OPT_B_PHP') ?></h4>
     <div class="nc-code-wrapper">
       <div class="nc-code-header">
         <span>Categories PHP Hook</span>
@@ -178,10 +178,10 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
 
   <!-- 4. Sidebar & Footer Widgets -->
   <div class="nc-doc-card">
-    <h3>4. Sidebar &amp; Footer Widgets</h3>
-    <p>Lightweight list functions designed for narrow sidebars or compact footer columns.</p>
+    <h3><?= i18n_r('NewsCenter/DOCS_SEC_WIDGETS') ?></h3>
+    <p><?= i18n_r('NewsCenter/DOCS_SEC_WIDGETS_DESC') ?></p>
 
-    <h4>Recent Posts (Text List)</h4>
+    <h4><?= i18n_r('NewsCenter/DOCS_RECENT_POSTS_LIST') ?></h4>
     <div class="nc-code-wrapper">
       <div class="nc-code-header">
         <span>Recent Posts List</span>
@@ -190,7 +190,7 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
       <pre><code>&lt;?php if (function_exists('nc_show_recent_posts_list')) { nc_show_recent_posts_list(5); } ?&gt;</code></pre>
     </div>
 
-    <h4>Monthly Archives</h4>
+    <h4><?= i18n_r('NewsCenter/DOCS_MONTHLY_ARCHIVES') ?></h4>
     <div class="nc-code-wrapper">
       <div class="nc-code-header">
         <span>Monthly Archives List</span>
@@ -202,15 +202,15 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
 
   <!-- 5. Template Engine Placeholders Reference -->
   <div class="nc-doc-card">
-    <h3>5. Template Placeholders Reference</h3>
-    <p>These variables can be used when editing templates under <strong>NewsCenter &rarr; Templates</strong>:</p>
+    <h3><?= i18n_r('NewsCenter/DOCS_SEC_PLACEHOLDERS') ?></h3>
+    <p><?= i18n_r('NewsCenter/DOCS_SEC_PLACEHOLDERS_DESC') ?></p>
 
     <table class="nc-table">
       <thead>
         <tr>
-          <th>Placeholder Tag</th>
-          <th>Available Context</th>
-          <th>Description</th>
+          <th><?= i18n_r('NewsCenter/PLACEHOLDER_TAG') ?></th>
+          <th><?= i18n_r('NewsCenter/AVAILABLE_CONTEXT') ?></th>
+          <th><?= i18n_r('NewsCenter/DESCRIPTION') ?></th>
         </tr>
       </thead>
       <tbody>
@@ -377,7 +377,7 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
       </tbody>
     </table>
 
-    <h4 style="margin-top:20px;">Conditionals Syntax</h4>
+    <h4 style="margin-top:20px;"><?= i18n_r('NewsCenter/DOCS_CONDITIONALS_TITLE') ?></h4>
     <div class="nc-code-wrapper">
       <div class="nc-code-header">
         <span>Image &amp; Bio Conditionals Example</span>

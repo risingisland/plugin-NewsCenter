@@ -49,11 +49,11 @@ if ($id > 0) {
 // Determine initial status text
 $is_future = strtotime($article['published_at']) > time();
 if ($article['status'] === 'published' && $is_future) {
-    $current_status_label = 'Scheduled';
+    $current_status_label = i18n_r('NewsCenter/SCHEDULED');
 } elseif ($article['status'] === 'published') {
-    $current_status_label = 'Published';
+    $current_status_label = i18n_r('NewsCenter/PUBLISHED');
 } else {
-    $current_status_label = 'Draft';
+    $current_status_label = i18n_r('NewsCenter/DRAFT');
 }
 ?>
 
@@ -79,11 +79,11 @@ if ($article['status'] === 'published' && $is_future) {
         </div>
         <div class="nc-form-group">
           <label for="nc-title-input"><?= i18n_r('NewsCenter/TITLE') ?></label>
-          <input type="text" id="nc-title-input" name="title" value="<?= htmlspecialchars($article['title']) ?>" class="nc-input" required placeholder="Enter article title...">
+          <input type="text" id="nc-title-input" name="title" value="<?= htmlspecialchars($article['title']) ?>" class="nc-input" required placeholder="<?= i18n_r('NewsCenter/TITLE_PLACEHOLDER') ?>">
         </div>
         <div class="nc-form-group" style="margin-bottom:0;">
           <label for="nc-slug-input"><?= i18n_r('NewsCenter/SLUG') ?></label>
-          <input type="text" id="nc-slug-input" name="slug" value="<?= htmlspecialchars($article['slug']) ?>" class="nc-input" required placeholder="article-slug">
+          <input type="text" id="nc-slug-input" name="slug" value="<?= htmlspecialchars($article['slug']) ?>" class="nc-input" required placeholder="<?= i18n_r('NewsCenter/SLUG_PLACEHOLDER') ?>">
         </div>
       </div>
 
@@ -95,15 +95,15 @@ if ($article['status'] === 'published' && $is_future) {
         <input type="hidden" id="nc-featured-image-input" name="featured_image" value="<?= htmlspecialchars($article['featured_image']) ?>">
         
         <div class="nc-featured-preview-box" id="nc-featured-thumb-wrap">
-          <img id="nc-featured-thumb-img" class="nc-featured-thumb-img" src="<?= htmlspecialchars($article['featured_image']) ?>" alt="Featured Thumbnail" style="<?= empty($article['featured_image']) ? 'display:none;' : 'display:block;' ?>">
+          <img id="nc-featured-thumb-img" class="nc-featured-thumb-img" src="<?= htmlspecialchars($article['featured_image']) ?>" alt="<?= i18n_r('NewsCenter/FEATURED_IMAGE') ?>" style="<?= empty($article['featured_image']) ? 'display:none;' : 'display:block;' ?>">
           <div id="nc-featured-placeholder" class="nc-featured-empty" style="<?= !empty($article['featured_image']) ? 'display:none;' : 'display:flex;' ?>">
-            <span>No image selected</span>
+            <span><?= i18n_r('NewsCenter/NO_IMAGE_SELECTED') ?></span>
           </div>
-          <button type="button" class="nc-featured-remove-btn" id="nc-featured-remove-btn" title="Remove Image" style="<?= empty($article['featured_image']) ? 'display:none;' : 'display:block;' ?>">&times;</button>
+          <button type="button" class="nc-featured-remove-btn" id="nc-featured-remove-btn" title="<?= i18n_r('NewsCenter/DELETE') ?>" style="<?= empty($article['featured_image']) ? 'display:none;' : 'display:block;' ?>">&times;</button>
         </div>
 
         <button type="button" id="nc-select-featured-btn" class="nc-btn nc-btn-small nc-btn-secondary" style="margin-top:10px; width:100%;">
-          <?= !empty($article['featured_image']) ? 'Change Image' : i18n_r('NewsCenter/CHOOSE_IMAGE') ?>
+          <?= !empty($article['featured_image']) ? i18n_r('NewsCenter/CHANGE_IMAGE') : i18n_r('NewsCenter/CHOOSE_IMAGE') ?>
         </button>
       </div>
 
@@ -140,8 +140,8 @@ if ($article['status'] === 'published' && $is_future) {
       <!-- Authors -->
       <div class="nc-card">
         <div class="nc-card-header">
-          <h3>Authors</h3>
-          <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=authors" class="nc-sublink">Manage</a>
+          <h3><?= i18n_r('NewsCenter/AUTHORS') ?></h3>
+          <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=authors" class="nc-sublink"><?= i18n_r('NewsCenter/MANAGE') ?></a>
         </div>
         <div class="nc-checkbox-list nc-scroll-box">
           <?php if (!empty($all_authors)): ?>
@@ -152,7 +152,7 @@ if ($article['status'] === 'published' && $is_future) {
               </label>
             <?php endforeach; ?>
           <?php else: ?>
-            <p class="nc-subtext">No authors. <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=authors">Add author</a></p>
+            <p class="nc-subtext"><a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=authors"><?= i18n_r('NewsCenter/NO_AUTHORS_HINT') ?></a></p>
           <?php endif; ?>
         </div>
       </div>
@@ -161,7 +161,7 @@ if ($article['status'] === 'published' && $is_future) {
       <div class="nc-card">
         <div class="nc-card-header">
           <h3><?= i18n_r('NewsCenter/CATEGORIES') ?></h3>
-          <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=categories" class="nc-sublink">Manage</a>
+          <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=categories" class="nc-sublink"><?= i18n_r('NewsCenter/MANAGE') ?></a>
         </div>
         <div class="nc-checkbox-list nc-scroll-box">
           <?php if (!empty($cats)): ?>
@@ -172,7 +172,7 @@ if ($article['status'] === 'published' && $is_future) {
               </label>
             <?php endforeach; ?>
           <?php else: ?>
-            <p class="nc-subtext">No categories. <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=categories">Add category</a></p>
+            <p class="nc-subtext"><a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=categories"><?= i18n_r('NewsCenter/NO_CATEGORIES_HINT') ?></a></p>
           <?php endif; ?>
         </div>
       </div>
@@ -181,12 +181,12 @@ if ($article['status'] === 'published' && $is_future) {
       <div class="nc-card">
         <div class="nc-card-header">
           <h3><?= i18n_r('NewsCenter/ALL_TAGS') ?></h3>
-          <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=tags" class="nc-sublink">Manage</a>
+          <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=tags" class="nc-sublink"><?= i18n_r('NewsCenter/MANAGE') ?></a>
         </div>
         <div class="nc-form-group" style="margin-bottom:0;">
-          <label for="nc-tags-input">Tags (comma-separated)</label>
-          <input type="text" id="nc-tags-input" name="tags" value="<?= htmlspecialchars(implode(', ', $assigned_tags)) ?>" class="nc-input" placeholder="news, updates, general">
-          <span class="nc-help-text">Separate tags with commas.</span>
+          <label for="nc-tags-input"><?= i18n_r('NewsCenter/TAGS_LABEL') ?></label>
+          <input type="text" id="nc-tags-input" name="tags" value="<?= htmlspecialchars(implode(', ', $assigned_tags)) ?>" class="nc-input" placeholder="<?= i18n_r('NewsCenter/TAGS_PLACEHOLDER') ?>">
+          <span class="nc-help-text"><?= i18n_r('NewsCenter/TAGS_HELP') ?></span>
         </div>
       </div>
     </div>
@@ -195,12 +195,12 @@ if ($article['status'] === 'published' && $is_future) {
     <div class="nc-card nc-row-gallery">
       <div class="nc-gallery-panel-header">
         <div>
-          <h3 style="margin:0 0 2px 0;">Article Gallery</h3>
+          <h3 style="margin:0 0 2px 0;"><?= i18n_r('NewsCenter/ARTICLE_GALLERY') ?></h3>
           <p style="margin:0; font-size:12px; color:var(--nc-text-muted);">
-            Drag cards by the &#9776; handle to reorder images. Images display with GLightbox on the article page.
+            <?= i18n_r('NewsCenter/GALLERY_HINT') ?>
           </p>
         </div>
-        <button type="button" id="nc-open-media-modal" class="nc-btn-add-images">+ Add Images</button>
+        <button type="button" id="nc-open-media-modal" class="nc-btn-add-images"><?= i18n_r('NewsCenter/ADD_IMAGES') ?></button>
       </div>
       <div id="nc-gallery-cards" class="nc-gallery-cards-grid"></div>
     </div>
@@ -212,28 +212,29 @@ if ($article['status'] === 'published' && $is_future) {
           <h3><?= i18n_r('NewsCenter/EXCERPT') ?></h3>
         </div>
         <div class="nc-form-group" style="margin-bottom:0;">
-          <textarea name="excerpt" id="excerpt" class="nc-textarea" rows="4" placeholder="Optional short summary..."><?= htmlspecialchars($article['excerpt']) ?></textarea>
+          <textarea name="excerpt" id="excerpt" class="nc-textarea" rows="4" placeholder="<?= i18n_r('NewsCenter/EXCERPT_PLACEHOLDER') ?>"><?= htmlspecialchars($article['excerpt']) ?></textarea>
+          <span class="nc-help-text"><?= i18n_r('NewsCenter/EXCERPT_HELP') ?></span>
         </div>
       </div>
 
       <div class="nc-card">
         <div class="nc-card-header">
-          <h3>SEO Options</h3>
+          <h3><?= i18n_r('NewsCenter/SEO_OPTIONS') ?></h3>
         </div>
         <div class="nc-form-group">
-          <label for="meta_title">Meta Title</label>
-          <input type="text" id="meta_title" name="meta_title" value="<?= htmlspecialchars($article['meta_title'] ?? '') ?>" class="nc-input" placeholder="Custom SEO browser title">
+          <label for="meta_title"><?= i18n_r('NewsCenter/META_TITLE') ?></label>
+          <input type="text" id="meta_title" name="meta_title" value="<?= htmlspecialchars($article['meta_title'] ?? '') ?>" class="nc-input" placeholder="<?= i18n_r('NewsCenter/META_TITLE_PLACEHOLDER') ?>">
         </div>
         <div class="nc-form-group" style="margin-bottom:0;">
-          <label for="meta_description">Meta Description</label>
-          <textarea id="meta_description" name="meta_description" class="nc-textarea" rows="2" placeholder="Search engine description..."><?= htmlspecialchars($article['meta_description'] ?? '') ?></textarea>
+          <label for="meta_description"><?= i18n_r('NewsCenter/META_DESC') ?></label>
+          <textarea id="meta_description" name="meta_description" class="nc-textarea" rows="2" placeholder="<?= i18n_r('NewsCenter/META_DESC_PLACEHOLDER') ?>"><?= htmlspecialchars($article['meta_description'] ?? '') ?></textarea>
         </div>
       </div>
     </div>
 
     <!-- Floating Sticky Bottom Bar for Save Button -->
     <div class="nc-sticky-save-bar" id="nc-sticky-bar">
-      <span class="nc-status-indicator" id="nc-bar-status-text">Status: <?= $current_status_label ?></span>
+      <span class="nc-status-indicator" id="nc-bar-status-text"><?= i18n_r('NewsCenter/STATUS') ?>: <?= $current_status_label ?></span>
       <button type="submit" class="nc-btn nc-btn-primary nc-btn-save" style="padding:10px 24px; font-size:14px;">&#128190; <?= i18n_r('NewsCenter/SAVE_ARTICLE') ?></button>
     </div>
   </form>
@@ -248,24 +249,24 @@ if ($article['status'] === 'published' && $is_future) {
     </div>
 
     <div class="nc-modal-tabs">
-      <button type="button" class="nc-modal-tab active" data-tab="browse">🖼️ Browse Uploads</button>
-      <button type="button" class="nc-modal-tab" data-tab="upload">⬆️ Upload Images</button>
+      <button type="button" class="nc-modal-tab active" data-tab="browse">🖼️ <?= i18n_r('NewsCenter/SELECT_IMAGES') ?></button>
+      <button type="button" class="nc-modal-tab" data-tab="upload">⬆️ <?= i18n_r('NewsCenter/UPLOAD_IMAGES') ?></button>
     </div>
 
     <div class="nc-modal-pane" id="nc-pane-browse">
       <div style="margin-bottom: 12px;">
-        <input type="search" id="nc-media-search" class="nc-input" placeholder="Search images by filename..." style="padding:6px 10px; font-size:13px;">
+        <input type="search" id="nc-media-search" class="nc-input" placeholder="<?= i18n_r('NewsCenter/SEARCH_IMAGES') ?>" style="padding:6px 10px; font-size:13px;">
       </div>
       <div class="nc-modal-body" id="nc-modal-file-list">
-        <p>Loading media...</p>
+        <p><?= i18n_r('NewsCenter/LOADING_MEDIA') ?></p>
       </div>
     </div>
 
     <div class="nc-modal-pane" id="nc-pane-upload" style="display:none;">
       <label class="nc-dropzone" id="nc-dropzone">
         <span style="font-size: 28px; display:block; margin-bottom:8px;">📁</span>
-        <strong>Click or drop images here to upload</strong>
-        <small style="color:var(--nc-text-muted); display:block; margin-top:4px;">Supports JPG, PNG, GIF, WebP</small>
+        <strong><?= i18n_r('NewsCenter/DROPZONE_PROMPT') ?></strong>
+        <small style="color:var(--nc-text-muted); display:block; margin-top:4px;"><?= i18n_r('NewsCenter/DROPZONE_FORMATS') ?></small>
         <input type="file" id="nc-file-input" multiple accept="image/jpeg,image/png,image/gif,image/webp" style="display:none;">
       </label>
       <div id="nc-upload-status" style="margin-top:12px; font-size:13px;"></div>
@@ -274,7 +275,7 @@ if ($article['status'] === 'published' && $is_future) {
     <div class="nc-modal-footer">
       <span id="nc-selection-info" style="margin-right:auto; font-size:13px; color:var(--nc-text-muted);">0 images selected</span>
       <button type="button" class="nc-btn nc-btn-outline nc-modal-close-btn"><?= i18n_r('NewsCenter/CANCEL') ?></button>
-      <button type="button" id="nc-insert-gallery-btn" class="nc-btn nc-btn-primary" disabled>Add to Gallery</button>
+      <button type="button" id="nc-insert-gallery-btn" class="nc-btn nc-btn-primary" disabled><?= i18n_r('NewsCenter/ADD_TO_GALLERY') ?></button>
     </div>
   </div>
 </div>

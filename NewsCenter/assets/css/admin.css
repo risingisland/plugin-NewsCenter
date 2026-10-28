@@ -570,3 +570,35 @@ textarea#excerpt.nc-textarea{
   cursor: default;
 }
 .nc-main-footer p { margin: 0; }
+
+/* Split Row: 1/3 Image + 2/3 Textarea */
+.nc-form-row-split {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 15px;
+}
+.nc-form-col-third {
+  flex: 0 0 calc(33.333% - 11px);
+  min-width: 140px;
+}
+.nc-form-col-twothirds {
+  flex: 0 0 calc(66.666% - 5px);
+  display: flex;
+  flex-direction: column;
+}
+.nc-form-col-twothirds textarea {
+  height: 145px;
+  resize: vertical;
+}
+
+@media (max-width: 640px) {
+  .nc-form-row-split {
+    flex-direction: column;
+  }
+  .nc-form-col-third,
+  .nc-form-col-twothirds {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+}

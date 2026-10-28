@@ -5,15 +5,15 @@ $db = nc_get_db();
 
 // Registered template choices
 $template_options = [
-    'single'          => 'Single Article Template (single)',
-    'list_item'       => 'Article List Item Template (list_item)',
-    'home_posts'      => 'Home Page Posts Grid Container (home_posts)',
-    'home_item'       => 'Home Page Post Card Item (home_item)',
-    'authors_list'    => 'Authors Directory Grid Container (authors_list)',
-    'author_item'     => 'Author Profile Card Item (author_item)',
-    'categories_list' => 'Categories Directory Grid Container (categories_list)',
-    'category_item'   => 'Category Card Item (category_item)',
-    'frontend_css'    => 'Frontend CSS Stylesheet (frontend_css)'
+    'single'          => i18n_r('NewsCenter/TPL_SINGLE'),
+    'list_item'       => i18n_r('NewsCenter/TPL_LIST_ITEM'),
+    'home_posts'      => i18n_r('NewsCenter/TPL_HOME_POSTS'),
+    'home_item'       => i18n_r('NewsCenter/TPL_HOME_ITEM'),
+    'authors_list'    => i18n_r('NewsCenter/TPL_AUTHORS_LIST'),
+    'author_item'     => i18n_r('NewsCenter/TPL_AUTHOR_ITEM'),
+    'categories_list' => i18n_r('NewsCenter/TPL_CATEGORIES_LIST'),
+    'category_item'   => i18n_r('NewsCenter/TPL_CATEGORY_ITEM'),
+    'frontend_css'    => i18n_r('NewsCenter/TPL_FRONTEND_CSS')
 ];
 
 // Active key
@@ -49,15 +49,15 @@ $is_css = ($active_key === 'frontend_css');
     <div>
       <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=templates&do=delete&restore_template=1&key=<?= urlencode($active_key) ?>&nc_csrf=<?= nc_csrf_token() ?>" 
          class="nc-btn nc-btn-danger" 
-         onclick="return confirm('Reset this template back to factory defaults? Any custom edits to this template will be lost.');">
-        &#8634; Restore Default
+         onclick="return confirm('<?= i18n_r('NewsCenter/CONFIRM_RESTORE') ?>');">
+        &#8634; <?= i18n_r('NewsCenter/RESTORE_DEFAULT') ?>
       </a>
     </div>
   </div>
 
   <div class="nc-card">
     <div style="margin-bottom: 18px; display:flex; align-items:center; gap:12px;">
-      <label for="nc-template-picker" style="font-weight:600; font-size:13px;">Select Template to Edit:</label>
+      <label for="nc-template-picker" style="font-weight:600; font-size:13px;"><?= i18n_r('NewsCenter/SELECT_TEMPLATE') ?></label>
       <select id="nc-template-picker" class="nc-select" style="max-width:420px;" onchange="location.href='load.php?id=<?= NC_PLUGIN_ID ?>&action=templates&key=' + encodeURIComponent(this.value);">
         <?php foreach ($template_options as $key => $label): ?>
           <option value="<?= htmlspecialchars($key) ?>" <?= ($active_key === $key) ? 'selected' : '' ?>><?= htmlspecialchars($label) ?></option>
@@ -74,7 +74,7 @@ $is_css = ($active_key === 'frontend_css');
       </div>
 
       <div class="nc-actions-bar" style="margin-top:15px;">
-        <button type="submit" class="nc-btn nc-btn-primary nc-btn-save">&#128190; Save Template</button>
+        <button type="submit" class="nc-btn nc-btn-primary nc-btn-save">&#128190; <?= i18n_r('NewsCenter/SAVE_TEMPLATE') ?></button>
       </div>
     </form>
   </div>

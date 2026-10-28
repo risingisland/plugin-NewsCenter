@@ -32,8 +32,9 @@ $date_format = !empty($settings['date_format']) ? $settings['date_format'] : 'M 
 ?>
 
 <div class="nc-container">
-  <div class="nc-page-header">
+  <div class="nc-page-header" style="display:flex; justify-content:space-between; align-items:center;">
     <h2><?= i18n_r('NewsCenter/TAB_ARTICLES') ?></h2>
+    <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=edit-article" class="nc-btn nc-btn-primary">+ <?= i18n_r('NewsCenter/NEW_ARTICLE') ?></a>
   </div>
 
   <div class="nc-card">
@@ -42,18 +43,18 @@ $date_format = !empty($settings['date_format']) ? $settings['date_format'] : 'M 
       <input type="hidden" name="id" value="<?= NC_PLUGIN_ID ?>">
       <input type="hidden" name="action" value="articles">
 
-      <input type="search" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Search articles..." class="nc-input" style="max-width:280px;">
+      <input type="search" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="<?= i18n_r('NewsCenter/SEARCH_ARTICLES') ?>" class="nc-input" style="max-width:280px;">
 
       <select name="status_filter" class="nc-select" style="max-width:180px;">
-        <option value="">All Statuses</option>
+        <option value=""><?= i18n_r('NewsCenter/ALL_STATUSES') ?></option>
         <option value="published" <?= ($status_filter === 'published') ? 'selected' : '' ?>><?= i18n_r('NewsCenter/PUBLISHED') ?></option>
-        <option value="scheduled" <?= ($status_filter === 'scheduled') ? 'selected' : '' ?>>Scheduled</option>
+        <option value="scheduled" <?= ($status_filter === 'scheduled') ? 'selected' : '' ?>><?= i18n_r('NewsCenter/SCHEDULED') ?></option>
         <option value="draft" <?= ($status_filter === 'draft') ? 'selected' : '' ?>><?= i18n_r('NewsCenter/DRAFT') ?></option>
       </select>
 
-      <button type="submit" class="nc-btn nc-btn-secondary">Filter</button>
+      <button type="submit" class="nc-btn nc-btn-secondary"><?= i18n_r('NewsCenter/FILTER') ?></button>
       <?php if (!empty($search) || !empty($status_filter)): ?>
-        <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=articles" class="nc-btn nc-btn-outline">Reset</a>
+        <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=articles" class="nc-btn nc-btn-outline"><?= i18n_r('NewsCenter/RESET') ?></a>
       <?php endif; ?>
     </form>
 
@@ -62,6 +63,7 @@ $date_format = !empty($settings['date_format']) ? $settings['date_format'] : 'M 
         <thead>
           <tr>
             <th><?= i18n_r('NewsCenter/TITLE') ?></th>
+            <th><?= i18n_r('NewsCenter/AUTHOR') ?></th>
             <th><?= i18n_r('NewsCenter/STATUS') ?></th>
             <th><?= i18n_r('NewsCenter/PUB_DATE') ?></th>
             <th class="nc-text-right"><?= i18n_r('NewsCenter/ACTIONS') ?></th>
@@ -73,9 +75,10 @@ $date_format = !empty($settings['date_format']) ? $settings['date_format'] : 'M 
               $gallery_items = !empty($art['gallery']) ? json_decode($art['gallery'], true) : [];
               $has_gallery = !empty($gallery_items) && is_array($gallery_items) && count($gallery_items) > 0;
               $is_future = strtotime($art['published_at']) > time();
+              $author_data = nc_get_article_authors_data($art['id'], $art['author']);
 
               if ($art['status'] === 'published' && $is_future) {
-                  $status_label = 'Scheduled';
+                  $status_label = i18n_r('NewsCenter/SCHEDULED');
                   $status_class = 'nc-status-scheduled';
               } elseif ($art['status'] === 'published') {
                   $status_label = i18n_r('NewsCenter/PUBLISHED');
@@ -92,10 +95,15 @@ $date_format = !empty($settings['date_format']) ? $settings['date_format'] : 'M 
                     <?= htmlspecialchars($art['title']) ?>
                   </a>
                   <?php if ($has_gallery): ?>
-                    <span class="nc-gallery-indicator" title="Gallery contains <?= count($gallery_items) ?> image(s)">📷 <?= count($gallery_items) ?></span>
+                    <span class="nc-gallery-indicator" title="<?= i18n_r('NewsCenter/GALLERY') ?>: <?= count($gallery_items) ?>">📷 <?= count($gallery_items) ?></span>
                   <?php endif; ?>
                 </div>
-                <div class="nc-subtext">/<?= htmlspecialchars($art['slug']) ?></div>
+                <!--div class="nc-subtext">/<?= htmlspecialchars($art['slug']) ?></div-->
+              </td>
+              <td>
+                <span class="nc-authors-list" style="font-size:13px; color:#475569;">
+                  <?= htmlspecialchars($author_data['author_name']) ?>
+                </span>
               </td>
               <td>
                 <span class="nc-badge-status <?= $status_class ?>"><?= $status_label ?></span>
@@ -105,7 +113,7 @@ $date_format = !empty($settings['date_format']) ? $settings['date_format'] : 'M 
                 <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=edit-article&article_id=<?= (int)$art['id'] ?>" class="nc-btn-action" title="<?= i18n_r('NewsCenter/EDIT') ?>">&#9998;</a>
                 <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=articles&do=delete&article_id=<?= (int)$art['id'] ?>&nc_csrf=<?= nc_csrf_token() ?>" 
                    class="nc-btn-action nc-btn-action-delete" 
-                   title="<?= i18n_r('NewsCenter/DELETE') ?>" 
+                   title="<?= i18n_r('NewsCenter/DELETE') ?>"
                    onclick="return confirm('<?= i18n_r('NewsCenter/CONFIRM_DELETE_ARTICLE') ?>');">&#128465;</a>
               </td>
             </tr>

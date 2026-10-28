@@ -23,7 +23,7 @@ $date_format = !empty($settings['date_format']) ? $settings['date_format'] : 'M 
   <div class="nc-stats-grid">
     <div class="nc-stat-card">
       <div class="nc-stat-number"><?= $total ?></div>
-      <div class="nc-stat-label">Total Articles</div>
+      <div class="nc-stat-label"><?= i18n_r('NewsCenter/TOTAL_ARTICLES') ?></div>
     </div>
     <div class="nc-stat-card nc-stat-published">
       <div class="nc-stat-number"><?= $published ?></div>
@@ -31,7 +31,7 @@ $date_format = !empty($settings['date_format']) ? $settings['date_format'] : 'M 
     </div>
     <div class="nc-stat-card nc-stat-scheduled">
       <div class="nc-stat-number" style="color:#4f46e5;"><?= $scheduled ?></div>
-      <div class="nc-stat-label">Scheduled</div>
+      <div class="nc-stat-label"><?= i18n_r('NewsCenter/SCHEDULED') ?></div>
     </div>
     <div class="nc-stat-card nc-stat-draft">
       <div class="nc-stat-number"><?= $draft ?></div>
@@ -43,14 +43,14 @@ $date_format = !empty($settings['date_format']) ? $settings['date_format'] : 'M 
     </div>
     <div class="nc-stat-card">
       <div class="nc-stat-number"><?= $authors ?></div>
-      <div class="nc-stat-label">Authors</div>
+      <div class="nc-stat-label"><?= i18n_r('NewsCenter/AUTHORS') ?></div>
     </div>
   </div>
 
   <!-- Recent Articles Table -->
   <div class="nc-card">
     <div class="nc-card-header">
-      <h3>Recent Articles</h3>
+      <h3><?= i18n_r('NewsCenter/RECENT_ARTICLES') ?></h3>
       <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=articles" class="nc-sublink"><?= i18n_r('NewsCenter/VIEW_ALL') ?> &rarr;</a>
     </div>
 
@@ -59,6 +59,7 @@ $date_format = !empty($settings['date_format']) ? $settings['date_format'] : 'M 
         <thead>
           <tr>
             <th><?= i18n_r('NewsCenter/TITLE') ?></th>
+            <th><?= i18n_r('NewsCenter/AUTHOR') ?></th>
             <th><?= i18n_r('NewsCenter/STATUS') ?></th>
             <th><?= i18n_r('NewsCenter/PUB_DATE') ?></th>
             <th class="nc-text-right"><?= i18n_r('NewsCenter/ACTIONS') ?></th>
@@ -70,9 +71,10 @@ $date_format = !empty($settings['date_format']) ? $settings['date_format'] : 'M 
               $gallery_items = !empty($art['gallery']) ? json_decode($art['gallery'], true) : [];
               $has_gallery = !empty($gallery_items) && is_array($gallery_items) && count($gallery_items) > 0;
               $is_future = strtotime($art['published_at']) > time();
+              $author_data = nc_get_article_authors_data($art['id'], $art['author']);
 
               if ($art['status'] === 'published' && $is_future) {
-                  $status_label = 'Scheduled';
+                  $status_label = i18n_r('NewsCenter/SCHEDULED');
                   $status_class = 'nc-status-scheduled';
               } elseif ($art['status'] === 'published') {
                   $status_label = i18n_r('NewsCenter/PUBLISHED');
@@ -89,10 +91,15 @@ $date_format = !empty($settings['date_format']) ? $settings['date_format'] : 'M 
                     <?= htmlspecialchars($art['title']) ?>
                   </a>
                   <?php if ($has_gallery): ?>
-                    <span class="nc-gallery-indicator" title="Gallery contains <?= count($gallery_items) ?> image(s)">📷 <?= count($gallery_items) ?></span>
+                    <span class="nc-gallery-indicator" title="<?= i18n_r('NewsCenter/GALLERY') ?>: <?= count($gallery_items) ?>">📷 <?= count($gallery_items) ?></span>
                   <?php endif; ?>
                 </div>
-                <div class="nc-subtext">/<?= htmlspecialchars($art['slug']) ?></div>
+                <!--div class="nc-subtext">/<?= htmlspecialchars($art['slug']) ?></div-->
+              </td>
+              <td>
+                <span class="nc-authors-list" style="font-size:13px; color:#475569;">
+                  <?= htmlspecialchars($author_data['author_name']) ?>
+                </span>
               </td>
               <td>
                 <span class="nc-badge-status <?= $status_class ?>"><?= $status_label ?></span>

@@ -9,16 +9,147 @@ document.addEventListener('DOMContentLoaded', () => {
     const galleryDataInput = document.getElementById('nc-gallery-data');
     const galleryCardsContainer = document.getElementById('nc-gallery-cards');
 
-    // 1. Initialize Autumnnote WYSIWYG
+    // 1. Initialize Autumnnote WYSIWYG v2.7.1 umd
+    function setParagraphSeparator() {
+        try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch (e) { /* ignore */ }
+    }
+
+    const BLOCK_TAGS = ['ADDRESS', 'ARTICLE', 'ASIDE', 'BLOCKQUOTE', 'DIV', 'DL', 'FIELDSET', 'FIGURE',
+        'FOOTER', 'FORM', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'HEADER', 'HR', 'OL', 'P', 'PRE',
+        'SECTION', 'TABLE', 'UL'];
+
+    function isPlainDiv(node) {
+        return node.tagName === 'DIV'
+            && !node.className
+            && !Array.from(node.children).some((c) => BLOCK_TAGS.indexOf(c.tagName) !== -1);
+    }
+
+    function divToParagraph(div) {
+        const p = document.createElement('p');
+        Array.from(div.attributes).forEach((a) => p.setAttribute(a.name, a.value));
+        while (div.firstChild) p.appendChild(div.firstChild);
+        return p;
+    }
+
+    function normalizeBlocks(html) {
+        const tpl = document.createElement('template');
+        tpl.innerHTML = html || '';
+        Array.from(tpl.content.children).forEach((node) => {
+            if (isPlainDiv(node)) node.replaceWith(divToParagraph(node));
+        });
+        return tpl.innerHTML;
+    }
+
+    function bindLiveParagraphs() {
+        const box = editor && editor.layoutInfo && editor.layoutInfo.container;
+        const scope = box || (rawContentEl && rawContentEl.parentElement) || document;
+        const editable = scope.querySelector('[contenteditable="true"]');
+        if (!editable) {
+            console.warn('NewsCenter: editable area not found, live <p> conversion disabled');
+            return;
+        }
+
+        const convert = () => {
+            const sel = window.getSelection();
+            const inside = sel && sel.rangeCount && editable.contains(sel.anchorNode) && editable.contains(sel.focusNode);
+            const saved = inside ? {
+                aN: sel.anchorNode, aO: sel.anchorOffset, fN: sel.focusNode, fO: sel.focusOffset
+            } : null;
+            const map = new Map();
+
+            Array.from(editable.children).forEach((node) => {
+                if (!isPlainDiv(node)) return;
+                const p = divToParagraph(node);
+                map.set(node, p);
+                editable.replaceChild(p, node);
+            });
+
+            if (saved && map.size) {
+                const aN = map.get(saved.aN) || saved.aN;
+                const fN = map.get(saved.fN) || saved.fN;
+                try { sel.setBaseAndExtent(aN, saved.aO, fN, saved.fO); } catch (e) { /* ignore */ }
+            }
+        };
+
+        const observer = new MutationObserver(() => {
+            observer.disconnect();
+            convert();
+            observer.observe(editable, { childList: true });
+        });
+
+        convert(); 
+        observer.observe(editable, { childList: true });
+    }
+
+    // Custom toolbar layout (one array per button group)
+    const TOOLBAR_LAYOUT = [
+        ['undo', 'redo'],
+        ['paragraphStyle'],
+        ['bold', 'italic', 'underline', 'strikethrough'],
+		['superscriptBtn', 'subscriptBtn'],
+        ['foreColor', 'backColor'],
+        ['alignLeft', 'alignCenter', 'alignRight', 'alignJustify'],
+        ['ul', 'ol', 'indent', 'outdent'],
+        ['link', 'video', 'table', 'hr'],
+        ['removeFormat'],
+        ['codeview', 'fullscreen']
+    ];
+
+    function resolveToolbar(AN) {
+        const lib = AN.buttons || {};
+        const exportName = { strikethrough: 'strikeBtn' };
+        return TOOLBAR_LAYOUT.map((group) => group.map((name) => {
+            const key = exportName[name] || (name + 'Btn');
+            return lib[key] || AN[key] || lib[name] || name;
+        }));
+    }
+
     let editor = null;
     const AN = window.AutumnNote || window.autumnnote;
+
+    const baseOptions = {
+        placeholder: 'Write your article content here...',
+        minHeight: 380,
+        resizable: true,
+
+        // Block formats in the dropdown - "Paragraph" is a <p>
+        paragraphStyles: [
+            { value: 'p', label: 'Paragraph' },
+            { value: 'h2', label: 'Heading 2' },
+            { value: 'h3', label: 'Heading 3' },
+            { value: 'h4', label: 'Heading 4' },
+            { value: 'blockquote', label: 'Quote' },
+            { value: 'pre', label: 'Code' }
+        ]
+    };
+
+    function afterCreate() {
+        if (typeof editor.isEmpty === 'function' && editor.isEmpty() && typeof editor.setHTML === 'function') {
+            editor.setHTML('<p><br></p>');
+        }
+        
+        if (typeof editor.on === 'function') {
+            editor.on('focus', setParagraphSeparator);
+        }
+        bindLiveParagraphs();
+    }
+
     if (AN && rawContentEl) {
+        setParagraphSeparator();
+
         try {
-            editor = AN.create(rawContentEl, {
-                placeholder: 'Write your article content here...',
-                minHeight: 380,
-                resizable: true
-            });
+            editor = AN.create(rawContentEl, Object.assign({}, baseOptions, { toolbar: resolveToolbar(AN) }));
+
+            const box = editor.layoutInfo && editor.layoutInfo.container;
+            if (box && !box.querySelector('button, select')) {
+                console.warn('NewsCenter: custom toolbar did not render, falling back to default toolbar');
+                Promise.resolve(editor.destroy()).then(() => {
+                    editor = AN.create(rawContentEl, baseOptions);
+                    afterCreate();
+                });
+            } else {
+                afterCreate();
+            }
         } catch (err) {
             console.error('NewsCenter: editor failed to initialize', err);
         }
@@ -103,7 +234,6 @@ document.addEventListener('DOMContentLoaded', () => {
               <input type="text" class="nc-gallery-card-caption" placeholder="Caption (optional)" value="${item.caption ? String(item.caption).replace(/"/g, '&quot;') : ''}">
             `;
 
-            // Delete action
             const closeBtn = card.querySelector('.nc-gallery-card-close');
             closeBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -113,7 +243,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderGalleryCards();
             });
 
-            // Caption action
             const captionInput = card.querySelector('.nc-gallery-card-caption');
             captionInput.addEventListener('input', () => {
                 item.caption = captionInput.value;
@@ -239,7 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (form) {
         form.addEventListener('submit', () => {
             if (editor && typeof editor.getHTML === 'function') {
-                rawContentEl.value = editor.getHTML();
+                rawContentEl.value = normalizeBlocks(editor.getHTML());
             }
             syncGalleryInput();
         });
@@ -306,7 +435,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let allMediaFiles = [];
     const selectedImages = new Map();
-    let currentMode = 'gallery'; // 'gallery' | 'featured'
+    let currentMode = 'gallery';
 
     function updateSelectionUI() {
         const count = selectedImages.size;

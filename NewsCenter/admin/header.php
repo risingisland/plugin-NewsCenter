@@ -32,7 +32,7 @@ if (!empty($_GET['action'])) {
     <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=articles" class="nc-tab <?= (in_array($current_action, ['articles', 'edit-article'])) ? 'active' : '' ?>"><?= i18n_r('NewsCenter/TAB_ARTICLES') ?></a>
     <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=categories" class="nc-tab <?= ($current_action === 'categories') ? 'active' : '' ?>"><?= i18n_r('NewsCenter/TAB_CATEGORIES') ?></a>
     <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=tags" class="nc-tab <?= ($current_action === 'tags') ? 'active' : '' ?>"><?= i18n_r('NewsCenter/TAB_TAGS') ?></a>
-    <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=authors" class="nc-tab <?= ($current_action === 'authors') ? 'active' : '' ?>">Authors</a>
+    <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=authors" class="nc-tab <?= ($current_action === 'authors') ? 'active' : '' ?>"><?= i18n_r('NewsCenter/TAB_AUTHORS') ?></a>
     <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=templates" class="nc-tab <?= ($current_action === 'templates') ? 'active' : '' ?>"><?= i18n_r('NewsCenter/TAB_TEMPLATES') ?></a>
     <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=settings" class="nc-tab <?= ($current_action === 'settings') ? 'active' : '' ?>"><?= i18n_r('NewsCenter/TAB_SETTINGS') ?></a>
     <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=docs" class="nc-tab <?= ($current_action === 'docs') ? 'active' : '' ?>"><?= i18n_r('NewsCenter/TAB_DOCS') ?></a>

@@ -11,18 +11,6 @@ if ($edit_id > 0) {
     $edit_tag = $stmt->fetch();
 }
 
-if (isset($_GET['do']) && $_GET['do'] === 'delete' && isset($_GET['tag_id'])) {
-    $token = $_GET['nc_csrf'] ?? '';
-    if (session_status() === PHP_SESSION_NONE) { session_start(); }
-    if (!hash_equals($_SESSION['nc_csrf_token'] ?? '', $token)) {
-        die(i18n_r('NewsCenter/CSRF_ERROR'));
-    }
-
-    $del_id = (int)$_GET['tag_id'];
-    nc_delete_tag($del_id);
-    redirect('load.php?id=' . NC_PLUGIN_ID . '&action=tags&status=deleted');
-}
-
 $tags = nc_get_tags_with_counts();
 ?>
 
@@ -32,8 +20,8 @@ $tags = nc_get_tags_with_counts();
   </div>
 
   <div class="nc-form-grid">
-	
-	<div class="nc-card">
+    <!-- Tags Table Column -->
+    <div class="nc-card">
       <div class="nc-card-header">
         <h3><?= i18n_r('NewsCenter/ALL_TAGS') ?></h3>
       </div>
@@ -73,6 +61,7 @@ $tags = nc_get_tags_with_counts();
       <?php endif; ?>
     </div>
   
+    <!-- Tag Add/Edit Form Column -->
     <div class="nc-card">
       <div class="nc-card-header">
         <h3><?= ($edit_tag) ? i18n_r('NewsCenter/EDIT_TAG') : i18n_r('NewsCenter/ADD_TAG') ?></h3>
@@ -101,7 +90,6 @@ $tags = nc_get_tags_with_counts();
         </div>
       </form>
     </div>
-	
   </div>
 </div>
 

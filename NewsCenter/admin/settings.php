@@ -26,7 +26,7 @@ if ($page_files) {
 
 <div class="nc-container">
   <div class="nc-page-header">
-    <h2>NewsCenter Settings</h2>
+    <h2><?= i18n_r('NewsCenter/SETTINGS_TITLE') ?></h2>
   </div>
 
   <div class="nc-card">
@@ -34,58 +34,58 @@ if ($page_files) {
       <input type="hidden" name="nc_csrf" value="<?= nc_csrf_token() ?>">
 
       <div class="nc-form-group">
-        <label for="nc-select-page">Target News Page</label>
+        <label for="nc-select-page"><?= i18n_r('NewsCenter/TARGET_NEWS_PAGE') ?></label>
         <div style="display:flex; gap:10px; align-items:center;">
           <select id="nc-select-page" class="nc-select" style="max-width:320px;">
-            <option value="">-- Choose Existing Page --</option>
+            <option value=""><?= i18n_r('NewsCenter/CHOOSE_EXISTING_PAGE') ?></option>
             <?php foreach ($pages as $p): ?>
               <option value="<?= htmlspecialchars($p['slug']) ?>" <?= ($p['slug'] === $active_slug) ? 'selected' : '' ?>>
                 <?= htmlspecialchars($p['title']) ?> (<?= htmlspecialchars($p['slug']) ?>)
               </option>
             <?php endforeach; ?>
           </select>
-          <span style="font-size:13px; color:var(--nc-text-muted);">&larr; Select to auto-fill slug</span>
+          <span style="font-size:13px; color:var(--nc-text-muted);"><?= i18n_r('NewsCenter/AUTOFILL_SLUG_HINT') ?></span>
         </div>
       </div>
 
       <div class="nc-form-group">
-        <label for="page_slug">Target News Page Slug</label>
+        <label for="page_slug"><?= i18n_r('NewsCenter/SETTING_PAGE_SLUG') ?></label>
         <input type="text" id="page_slug" name="page_slug" value="<?= htmlspecialchars($active_slug) ?>" class="nc-input" style="max-width:320px;" required>
-        <span class="nc-help-text">Slug of the GetSimple page that displays your news feed.</span>
+        <span class="nc-help-text"><?= i18n_r('NewsCenter/SETTING_PAGE_SLUG_HELP') ?></span>
       </div>
 
       <!-- Trailing Slash Checkbox -->
       <div class="nc-form-group" style="margin: 20px 0;">
         <label style="display:inline-flex; align-items:center; gap:8px; font-weight:600; cursor:pointer;">
           <input type="checkbox" id="trailing_slash" name="trailing_slash" value="1" <?= $trailing_slash ? 'checked' : '' ?> style="width:auto; margin:0;">
-          Include Trailing Slash on Fancy Links
+          <?= i18n_r('NewsCenter/TRAILING_SLASH_LABEL') ?>
         </label>
         <span class="nc-help-text" style="margin-left:22px;">
-          When checked: <code>/news/post/my-article/</code> &bull; When unchecked: <code>/news/post/my-article</code>
+          <?= i18n_r('NewsCenter/TRAILING_SLASH_HELP') ?>
         </span>
       </div>
 
       <div class="nc-form-row">
         <div class="nc-form-group nc-col-half">
-          <label for="posts_per_page">Articles Per Page</label>
+          <label for="posts_per_page"><?= i18n_r('NewsCenter/SETTING_POSTS_PER_PAGE') ?></label>
           <input type="number" id="posts_per_page" name="posts_per_page" value="<?= (int)($settings['posts_per_page'] ?? 10) ?>" class="nc-input" min="1" max="100">
         </div>
 
         <div class="nc-form-group nc-col-half">
-          <label for="excerpt_length">Excerpt Length (characters)</label>
+          <label for="excerpt_length"><?= i18n_r('NewsCenter/SETTING_EXCERPT_LENGTH') ?></label>
           <input type="number" id="excerpt_length" name="excerpt_length" value="<?= (int)($settings['excerpt_length'] ?? 250) ?>" class="nc-input" min="50" max="1000">
         </div>
       </div>
 
       <div class="nc-form-row">
         <div class="nc-form-group nc-col-half">
-          <label for="date_format">Date Format</label>
+          <label for="date_format"><?= i18n_r('NewsCenter/SETTING_DATE_FORMAT') ?></label>
           <input type="text" id="date_format" name="date_format" value="<?= htmlspecialchars($settings['date_format'] ?? 'F j, Y') ?>" class="nc-input">
-          <span class="nc-help-text">PHP Date formatting string (e.g. <code>F j, Y</code>, <code>Y-m-d</code>).</span>
+          <span class="nc-help-text"><?= i18n_r('NewsCenter/SETTING_DATE_FORMAT_HELP') ?></span>
         </div>
 
         <div class="nc-form-group nc-col-half">
-          <label for="sitemap_priority">Sitemap Priority</label>
+          <label for="sitemap_priority"><?= i18n_r('NewsCenter/SITEMAP_PRIORITY') ?></label>
           <select id="sitemap_priority" name="sitemap_priority" class="nc-select">
             <?php foreach (['1.0', '0.8', '0.6', '0.4'] as $p): ?>
               <option value="<?= $p ?>" <?= (($settings['sitemap_priority'] ?? '0.8') === $p) ? 'selected' : '' ?>><?= $p ?></option>
@@ -95,7 +95,7 @@ if ($page_files) {
       </div>
 
       <div class="nc-actions-bar" style="margin-top:20px;">
-        <button type="submit" class="nc-btn nc-btn-primary nc-btn-save">&#128190; Save Settings</button>
+        <button type="submit" class="nc-btn nc-btn-primary nc-btn-save">&#128190; <?= i18n_r('NewsCenter/SAVE_SETTINGS') ?></button>
       </div>
     </form>
   </div>
@@ -103,25 +103,25 @@ if ($page_files) {
   <!-- Sitemap Rebuilder Card -->
   <div class="nc-card" style="margin-top:25px;">
     <div class="nc-card-header" style="display:flex; justify-content:space-between; align-items:center;">
-      <h3 style="margin:0;">XML Sitemap Maintenance</h3>
+      <h3 style="margin:0;"><?= i18n_r('NewsCenter/SITEMAP_MAINTENANCE') ?></h3>
       <form action="load.php?id=<?= NC_PLUGIN_ID ?>&action=rebuild_sitemap" method="POST" style="margin:0;">
         <input type="hidden" name="nc_csrf" value="<?= nc_csrf_token() ?>">
-        <button type="submit" class="nc-btn nc-btn-small nc-btn-secondary">&#8634; Rebuild Sitemap Now</button>
+        <button type="submit" class="nc-btn nc-btn-small nc-btn-secondary">&#8634; <?= i18n_r('NewsCenter/REBUILD_SITEMAP_NOW') ?></button>
       </form>
     </div>
     <p style="font-size:13px; color:var(--nc-text-muted); margin:0;">
-      Articles are automatically appended to your root <code>sitemap.xml</code> whenever published or edited. Click the button above if you wish to manually regenerate the static XML file immediately.
+      <?= i18n_r('NewsCenter/SITEMAP_HELP') ?>
     </p>
   </div>
 
   <!-- Dynamic .htaccess Rules Card -->
   <div class="nc-card" style="margin-top:25px;">
     <div class="nc-card-header" style="display:flex; justify-content:space-between; align-items:center;">
-      <h3 style="margin:0;">Apache .htaccess Rules</h3>
-      <button type="button" class="nc-btn nc-btn-small nc-btn-primary" id="nc-copy-rules-btn" onclick="ncCopyHtaccess()">📋 Copy Rules</button>
+      <h3 style="margin:0;"><?= i18n_r('NewsCenter/HTACCESS_RULES') ?></h3>
+      <button type="button" class="nc-btn nc-btn-small nc-btn-primary" id="nc-copy-rules-btn" onclick="ncCopyHtaccess()">📋 <?= i18n_r('NewsCenter/COPY_RULES') ?></button>
     </div>
     <p style="font-size:13px; color:var(--nc-text-muted); margin:0 0 12px 0;">
-      If Fancy (pretty) URLs are enabled in GetSimple, paste these rewrite rules into your root <code>.htaccess</code> file right before <code># default rewrite rule</code>.
+      <?= i18n_r('NewsCenter/HTACCESS_HELP') ?>
     </p>
 
     <div style="background:#0f172a; border-radius:6px; overflow:hidden; border:1px solid #1e293b;">
@@ -173,9 +173,12 @@ function ncCopyHtaccess() {
     if (!code || !btn) return;
 
     const text = code.innerText.trim();
+    const copiedText = <?= json_encode(i18n_r('NewsCenter/COPIED')) ?>;
+    const defaultText = '📋 ' + <?= json_encode(i18n_r('NewsCenter/COPY_RULES')) ?>;
+
     navigator.clipboard.writeText(text).then(() => {
-        btn.innerText = '✓ Copied!';
-        setTimeout(() => { btn.innerText = '📋 Copy Rules'; }, 1800);
+        btn.innerText = '✓ ' + copiedText;
+        setTimeout(() => { btn.innerText = defaultText; }, 1800);
     }).catch(() => {
         const ta = document.createElement('textarea');
         ta.value = text;
@@ -185,8 +188,8 @@ function ncCopyHtaccess() {
         ta.select();
         document.execCommand('copy');
         document.body.removeChild(ta);
-        btn.innerText = '✓ Copied!';
-        setTimeout(() => { btn.innerText = '📋 Copy Rules'; }, 1800);
+        btn.innerText = '✓ ' + copiedText;
+        setTimeout(() => { btn.innerText = defaultText; }, 1800);
     });
 }
 </script>

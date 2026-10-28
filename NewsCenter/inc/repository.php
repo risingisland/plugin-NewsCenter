@@ -96,6 +96,21 @@ function nc_delete_author($id) {
 }
 
 /**
+ * Fetch all tags with associated article counts.
+ */
+function nc_get_tags_with_counts() {
+    $db = nc_get_db();
+    $sql = "
+        SELECT t.*, COUNT(at.article_id) AS article_count 
+        FROM nc_tags t
+        LEFT JOIN nc_article_tags at ON t.id = at.tag_id
+        GROUP BY t.id
+        ORDER BY t.name ASC
+    ";
+    return $db->query($sql)->fetchAll();
+}
+
+/**
  * Insert or update a tag record.
  */
 function nc_save_tag($name, $slug, $id = 0) {
