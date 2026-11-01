@@ -38,7 +38,7 @@ if (!function_exists('nc_reset_default_templates')) {
                 'content' => '<article class="nc-card">
   {{if:article.has_image}}
   <div class="nc-card-image">
-    <a href="{{article.url}}"><img src="{{article.featured_image}}" alt="{{article.title}}"></a>
+    <a href="{{article.url}}"><img src="{{article.featured_image_thumb}}" alt="{{article.title}}" loading="lazy"></a>
   </div>
   {{/if:article.has_image}}
   <div class="nc-card-body">
@@ -107,7 +107,7 @@ if (!function_exists('nc_reset_default_templates')) {
                 'content' => '<article class="nc-home-card">
   {{if:article.has_image}}
   <div class="nc-home-card-image">
-    <a href="{{article.url}}"><img src="{{article.featured_image}}" alt="{{article.title}}" loading="lazy"></a>
+    <a href="{{article.url}}"><img src="{{article.featured_image_thumb}}" alt="{{article.title}}" loading="lazy"></a>
   </div>
   {{/if:article.has_image}}
   <div class="nc-home-card-content">
@@ -204,6 +204,24 @@ if (!function_exists('nc_reset_default_templates')) {
 .nc-author-avatar-large { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; display: block; border: 3px solid #e2e8f0; }
 .nc-archive-title { margin: 0 0 8px; font-size: 28px; color: #0f172a; }
 .nc-archive-desc, .nc-author-bio-full { font-size: 15px; color: #475569; line-height: 1.6; }
+
+/* Homepage News Grid (Fixed 3-Column Ratio) */
+.nc-home-news-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+@media (max-width: 900px) { .nc-home-news-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .nc-home-news-grid { grid-template-columns: 1fr; } }
+
+/* Home Card */
+.nc-home-card { display: flex; flex-direction: column; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; text-align: left; }
+.nc-home-card-image { width: 100%; height: 200px; overflow: hidden; background: #f1f5f9; }
+.nc-home-card-image img, .nc-home-news-grid img { width: 100%; height: 200px; object-fit: cover; display: block; }
+.nc-home-card-content { padding: 16px; display: flex; flex-direction: column; flex: 1; }
+.nc-home-card-meta { font-size: 12px; color: #64748b; margin-bottom: 8px; display: flex; gap: 10px; }
+.nc-home-card-title { margin: 0 0 10px 0; font-size: 18px; line-height: 1.35; }
+.nc-home-card-title a { color: #0f172a; text-decoration: none; }
+.nc-home-card-title a:hover { color: #2563eb; text-decoration: underline; }
+.nc-home-card-excerpt { font-size: 13.5px; color: #475569; line-height: 1.55; margin: 0 0 14px 0; flex-grow: 1; }
+.nc-home-card-readmore { font-size: 13px; font-weight: 600; color: #2563eb; text-decoration: none; align-self: flex-start; }
+.nc-home-card-readmore:hover { text-decoration: underline; }
 
 /* Article Single */
 .nc-article-single { margin: 20px 0; }

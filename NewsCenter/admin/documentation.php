@@ -255,6 +255,11 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
           <td>Featured image web URL.</td>
         </tr>
         <tr>
+          <td><code>{{article.featured_image_thumb}}</code></td>
+          <td>List, Home, Single</td>
+          <td>Optimized thumbnail URL of the featured image for faster loading in feeds and grids.</td>
+        </tr>
+        <tr>
           <td><code>{{article.excerpt}}</code></td>
           <td>Single, List, Home</td>
           <td>Trimmed summary text.</td>

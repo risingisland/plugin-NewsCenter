@@ -31,6 +31,45 @@ function nc_current_author($set = null) {
 }
 
 /**
+ * Resolves the native GetSimple thumbnail for an article's featured image
+ * using nc_thumb_url() from helpers.php.
+ */
+function nc_get_article_thumb_url($image_val) {
+    if (empty($image_val)) {
+        return '';
+    }
+
+    $clean = trim((string)$image_val);
+
+    global $SITEURL;
+    $uploads_base = rtrim((string)$SITEURL, '/') . '/data/uploads/';
+    if (strpos($clean, $uploads_base) === 0) {
+        $clean = substr($clean, strlen($uploads_base));
+    } else {
+        $clean = ltrim($clean, '/');
+        if (strpos($clean, 'data/uploads/') === 0) {
+            $clean = substr($clean, strlen('data/uploads/'));
+        }
+    }
+
+    if (function_exists('nc_thumb_url')) {
+        return nc_thumb_url($clean);
+    }
+
+    $parts = explode('/', $clean);
+    $base  = array_pop($parts);
+    $sub   = count($parts) ? implode('/', $parts) . '/' : '';
+
+    if (defined('GSTHUMBNAILPATH') && is_file(GSTHUMBNAILPATH . $sub . 'thumbnail.' . $base)) {
+        $site = defined('SITEURL') ? SITEURL : (isset($GLOBALS['SITEURL']) ? $GLOBALS['SITEURL'] : '/');
+        $site = rtrim($site, '/') . '/';
+        return $site . 'data/thumbs/' . implode('/', array_map('rawurlencode', explode('/', $sub . 'thumbnail.' . $base)));
+    }
+
+    return function_exists('nc_image_url') ? nc_image_url($clean) : $image_val;
+}
+
+/**
  * Comprehensive SEO Image resolver for BetterSeo
  */
 function nc_get_current_seo_image() {
@@ -540,24 +579,26 @@ function nc_render_single_post($slug) {
     $template = $t_stmt->fetchColumn();
 
     $content_with_gallery = nc_sanitize_html($article['content']) . $gallery_html;
+    $thumb_url = !empty($article['featured_image']) ? nc_get_article_thumb_url($article['featured_image']) : '';
 
     $vars = [
-        'article.title'            => htmlspecialchars($article['title'], ENT_QUOTES, 'UTF-8'),
-        'article.slug'             => htmlspecialchars($article['slug'], ENT_QUOTES, 'UTF-8'),
-        'article.content'          => $content_with_gallery,
-        'article.excerpt'          => htmlspecialchars($article['excerpt'], ENT_QUOTES, 'UTF-8'),
-        'article.date'             => date($date_format, strtotime($article['published_at'])),
-        'article.date_raw'         => $article['published_at'],
-        'article.author'           => $author_meta['author_name'],
-        'article.author_url'       => htmlspecialchars($author_meta['author_url'], ENT_QUOTES, 'UTF-8'),
-        'article.authors'          => $author_meta['authors'],
-        'article.author_image'     => htmlspecialchars($author_meta['author_image'], ENT_QUOTES, 'UTF-8'),
-        'article.has_author_image' => !empty($author_meta['author_image']),
-        'article.featured_image'   => htmlspecialchars($article['featured_image'], ENT_QUOTES, 'UTF-8'),
-        'article.has_image'        => !empty($article['featured_image']),
-        'article.categories'       => implode(', ', $cat_links),
-        'article.tags'             => implode(' ', $tag_links),
-        'news.url'                 => $news_url
+        'article.title'                => htmlspecialchars($article['title'], ENT_QUOTES, 'UTF-8'),
+        'article.slug'                 => htmlspecialchars($article['slug'], ENT_QUOTES, 'UTF-8'),
+        'article.content'              => $content_with_gallery,
+        'article.excerpt'              => htmlspecialchars($article['excerpt'], ENT_QUOTES, 'UTF-8'),
+        'article.date'                 => date($date_format, strtotime($article['published_at'])),
+        'article.date_raw'             => $article['published_at'],
+        'article.author'               => $author_meta['author_name'],
+        'article.author_url'           => htmlspecialchars($author_meta['author_url'], ENT_QUOTES, 'UTF-8'),
+        'article.authors'              => $author_meta['authors'],
+        'article.author_image'         => htmlspecialchars($author_meta['author_image'], ENT_QUOTES, 'UTF-8'),
+        'article.has_author_image'     => !empty($author_meta['author_image']),
+        'article.featured_image'       => htmlspecialchars($article['featured_image'], ENT_QUOTES, 'UTF-8'),
+        'article.featured_image_thumb' => htmlspecialchars($thumb_url, ENT_QUOTES, 'UTF-8'),
+        'article.has_image'            => !empty($article['featured_image']),
+        'article.categories'           => implode(', ', $cat_links),
+        'article.tags'                 => implode(' ', $tag_links),
+        'news.url'                     => $news_url
     ];
 
     return nc_render_template($template, $vars);
@@ -627,20 +668,22 @@ function nc_render_archive_list($filter_type = 'all', $filter_val = '') {
         foreach ($articles as $art) {
             $excerpt = !empty($art['excerpt']) ? $art['excerpt'] : substr(strip_tags($art['content']), 0, $excerpt_len) . '...';
             $author_meta = nc_get_article_authors_data($art['id'], $art['author']);
+            $thumb_url = !empty($art['featured_image']) ? nc_get_article_thumb_url($art['featured_image']) : '';
 
             $vars = [
-                'article.title'            => htmlspecialchars($art['title'], ENT_QUOTES, 'UTF-8'),
-                'article.url'              => htmlspecialchars(nc_build_url('post', $art['slug']), ENT_QUOTES, 'UTF-8'),
-                'article.excerpt'          => htmlspecialchars($excerpt, ENT_QUOTES, 'UTF-8'),
-                'article.date'             => date($date_format, strtotime($art['published_at'])),
-                'article.author'           => $author_meta['author_name'],
-                'article.author_url'       => htmlspecialchars($author_meta['author_url']),
-                'article.authors'          => $author_meta['authors'],
-                'article.author_image'     => htmlspecialchars($author_meta['author_image'], ENT_QUOTES, 'UTF-8'),
-                'article.has_author_image' => !empty($author_meta['author_image']),
-                'article.featured_image'   => htmlspecialchars($art['featured_image'], ENT_QUOTES, 'UTF-8'),
-                'article.has_image'        => !empty($art['featured_image']),
-                'news.url'                 => $news_url
+                'article.title'                => htmlspecialchars($art['title'], ENT_QUOTES, 'UTF-8'),
+                'article.url'                  => htmlspecialchars(nc_build_url('post', $art['slug']), ENT_QUOTES, 'UTF-8'),
+                'article.excerpt'              => htmlspecialchars($excerpt, ENT_QUOTES, 'UTF-8'),
+                'article.date'                 => date($date_format, strtotime($art['published_at'])),
+                'article.author'               => $author_meta['author_name'],
+                'article.author_url'           => htmlspecialchars($author_meta['author_url']),
+                'article.authors'              => $author_meta['authors'],
+                'article.author_image'         => htmlspecialchars($author_meta['author_image'], ENT_QUOTES, 'UTF-8'),
+                'article.has_author_image'     => !empty($author_meta['author_image']),
+                'article.featured_image'       => htmlspecialchars($art['featured_image'], ENT_QUOTES, 'UTF-8'),
+                'article.featured_image_thumb' => htmlspecialchars($thumb_url, ENT_QUOTES, 'UTF-8'),
+                'article.has_image'            => !empty($art['featured_image']),
+                'news.url'                     => $news_url
             ];
             $rendered_cards .= nc_render_template($item_template, $vars);
         }
@@ -788,20 +831,22 @@ function nc_get_recent_posts_html($limit = 3, $category_slug = '', $title = 'Lat
     foreach ($articles as $art) {
         $excerpt = !empty($art['excerpt']) ? $art['excerpt'] : substr(strip_tags($art['content']), 0, $excerpt_len) . '...';
         $author_meta = nc_get_article_authors_data($art['id'], $art['author']);
+        $thumb_url = !empty($art['featured_image']) ? nc_get_article_thumb_url($art['featured_image']) : '';
 
         $vars = [
-            'article.title'            => htmlspecialchars($art['title'], ENT_QUOTES, 'UTF-8'),
-            'article.url'              => htmlspecialchars(nc_build_url('post', $art['slug']), ENT_QUOTES, 'UTF-8'),
-            'article.excerpt'          => htmlspecialchars($excerpt, ENT_QUOTES, 'UTF-8'),
-            'article.date'             => date($date_format, strtotime($art['published_at'])),
-            'article.author'           => $author_meta['author_name'],
-            'article.author_url'       => htmlspecialchars($author_meta['author_url']),
-            'article.authors'          => $author_meta['authors'],
-            'article.author_image'     => htmlspecialchars($author_meta['author_image'], ENT_QUOTES, 'UTF-8'),
-            'article.has_author_image' => !empty($author_meta['author_image']),
-            'article.featured_image'   => htmlspecialchars($art['featured_image'], ENT_QUOTES, 'UTF-8'),
-            'article.has_image'        => !empty($art['featured_image']),
-            'news.url'                 => $news_url
+            'article.title'                => htmlspecialchars($art['title'], ENT_QUOTES, 'UTF-8'),
+            'article.url'                  => htmlspecialchars(nc_build_url('post', $art['slug']), ENT_QUOTES, 'UTF-8'),
+            'article.excerpt'              => htmlspecialchars($excerpt, ENT_QUOTES, 'UTF-8'),
+            'article.date'                 => date($date_format, strtotime($art['published_at'])),
+            'article.author'               => $author_meta['author_name'],
+            'article.author_url'           => htmlspecialchars($author_meta['author_url']),
+            'article.authors'              => $author_meta['authors'],
+            'article.author_image'         => htmlspecialchars($author_meta['author_image'], ENT_QUOTES, 'UTF-8'),
+            'article.has_author_image'     => !empty($author_meta['author_image']),
+            'article.featured_image'       => htmlspecialchars($art['featured_image'], ENT_QUOTES, 'UTF-8'),
+            'article.featured_image_thumb' => htmlspecialchars($thumb_url, ENT_QUOTES, 'UTF-8'),
+            'article.has_image'            => !empty($art['featured_image']),
+            'news.url'                     => $news_url
         ];
         $rendered_items .= nc_render_template($item_tpl, $vars) . "\n";
     }

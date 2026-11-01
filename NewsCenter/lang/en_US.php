@@ -1,6 +1,6 @@
 <?php
 $i18n = [
-    'PLUGIN_DESC'              => 'Modern news & article management plugin with SQLite, Autumnnote, and CodeMirror.',
+    'PLUGIN_DESC'              => 'News and article management with modern SQLite-Powered Architecture.',
     'NAV_TITLE'                => 'News',
     'ADMIN_TITLE'              => 'News Center',
     'ACCESS_DENIED'            => 'Access denied: You do not have sufficient permissions.',
@@ -165,7 +165,7 @@ $i18n = [
     'DROPZONE_PROMPT'          => 'Click or drop images here to upload',
     'DROPZONE_FORMATS'         => 'Supports JPG, PNG, GIF, WebP',
     'SEARCH_IMAGES'            => 'Search images by filename...',
-    'FOOTER_TAGLINE'           => 'News Center for GetSimple CMS CE &bull; Modern SQLite-Powered Architecture',
+    'FOOTER_TAGLINE'           => 'News articles, categories, tags, authors and galleries with template management.',
     'CANCEL'                   => 'Cancel',
     'ARTICLES_COUNT'           => 'Articles',
     'NO_CATEGORIES_YET'        => 'No categories found. Create one using the form on the left.',
