@@ -586,7 +586,7 @@ function nc_render_single_post($slug) {
         'article.slug'                 => htmlspecialchars($article['slug'], ENT_QUOTES, 'UTF-8'),
         'article.content'              => $content_with_gallery,
         'article.excerpt'              => htmlspecialchars($article['excerpt'], ENT_QUOTES, 'UTF-8'),
-        'article.date'                 => date($date_format, strtotime($article['published_at'])),
+        'article.date'                 => nc_date($date_format, strtotime($article['published_at'])),
         'article.date_raw'             => $article['published_at'],
         'article.author'               => $author_meta['author_name'],
         'article.author_url'           => htmlspecialchars($author_meta['author_url'], ENT_QUOTES, 'UTF-8'),
@@ -674,7 +674,7 @@ function nc_render_archive_list($filter_type = 'all', $filter_val = '') {
                 'article.title'                => htmlspecialchars($art['title'], ENT_QUOTES, 'UTF-8'),
                 'article.url'                  => htmlspecialchars(nc_build_url('post', $art['slug']), ENT_QUOTES, 'UTF-8'),
                 'article.excerpt'              => htmlspecialchars($excerpt, ENT_QUOTES, 'UTF-8'),
-                'article.date'                 => date($date_format, strtotime($art['published_at'])),
+                'article.date'                 => nc_date($date_format, strtotime($art['published_at'])),
                 'article.author'               => $author_meta['author_name'],
                 'article.author_url'           => htmlspecialchars($author_meta['author_url']),
                 'article.authors'              => $author_meta['authors'],
@@ -837,7 +837,7 @@ function nc_get_recent_posts_html($limit = 3, $category_slug = '', $title = 'Lat
             'article.title'                => htmlspecialchars($art['title'], ENT_QUOTES, 'UTF-8'),
             'article.url'                  => htmlspecialchars(nc_build_url('post', $art['slug']), ENT_QUOTES, 'UTF-8'),
             'article.excerpt'              => htmlspecialchars($excerpt, ENT_QUOTES, 'UTF-8'),
-            'article.date'                 => date($date_format, strtotime($art['published_at'])),
+            'article.date'                 => nc_date($date_format, strtotime($art['published_at'])),
             'article.author'               => $author_meta['author_name'],
             'article.author_url'           => htmlspecialchars($author_meta['author_url']),
             'article.authors'              => $author_meta['authors'],
@@ -984,7 +984,7 @@ function nc_show_recent_posts_list($limit = 5) {
         $link = nc_build_url('post', $art['slug']);
         echo '<li>';
         echo '<a href="' . htmlspecialchars($link, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($art['title'], ENT_QUOTES, 'UTF-8') . '</a> ';
-        echo '<span class="nc-recent-date">(' . date($date_format, strtotime($art['published_at'])) . ')</span>';
+        echo '<span class="nc-recent-date">(' . nc_date($date_format, strtotime($art['published_at'])) . ')</span>';
         echo '</li>';
     }
     echo '</ul>';
@@ -1007,7 +1007,7 @@ function nc_show_archives() {
     echo '<ul class="nc-archives-list">';
     foreach ($archives as $arch) {
         $time = strtotime($arch['archive_month'] . '-01');
-        $label = date('F Y', $time);
+        $label = nc_date('F Y', $time);
         $link = nc_build_url('archive', $arch['archive_month']);
         echo '<li>';
         echo '<a href="' . htmlspecialchars($link, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</a> ';

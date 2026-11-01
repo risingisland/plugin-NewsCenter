@@ -467,3 +467,44 @@ function nc_handle_post_actions($action) {
         redirect('load.php?id=' . NC_PLUGIN_ID . '&action=settings&status=saved');
     }
 }
+
+/**
+ * Localised replacement for date().
+ */
+function nc_date($format, $timestamp = null) {
+    if ($timestamp === null) $timestamp = time();
+    $timestamp = (int)$timestamp;
+
+    $lookup = function ($key, $fallback) {
+        $val = i18n_r('NewsCenter/' . $key);
+        return ($val === '' || $val === null || $val[0] === '{') ? $fallback : $val;
+    };
+
+    $out = '';
+    $len = strlen($format);
+    for ($i = 0; $i < $len; $i++) {
+        $c = $format[$i];
+
+        if ($c === '\\') {                      // already-escaped character: copy as-is
+            $out .= $c;
+            if ($i + 1 < $len) $out .= $format[++$i];
+            continue;
+        }
+
+        $name = null;
+        switch ($c) {
+            case 'l': $name = $lookup('DAY_' . date('w', $timestamp),         date('l', $timestamp)); break;
+            case 'D': $name = $lookup('DAY_SHORT_' . date('w', $timestamp),   date('D', $timestamp)); break;
+            case 'F': $name = $lookup('MONTH_' . date('n', $timestamp),       date('F', $timestamp)); break;
+            case 'M': $name = $lookup('MONTH_SHORT_' . date('n', $timestamp), date('M', $timestamp)); break;
+        }
+
+        if ($name !== null) {
+            // Escape ASCII letters so date() treats the name as literal text
+            $out .= preg_replace('/([a-zA-Z])/', '\\\\$1', $name);
+        } else {
+            $out .= $c;
+        }
+    }
+    return date($out, $timestamp);
+}

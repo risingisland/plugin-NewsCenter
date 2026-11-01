@@ -108,7 +108,7 @@ $date_format = !empty($settings['date_format']) ? $settings['date_format'] : 'M 
               <td>
                 <span class="nc-badge-status <?= $status_class ?>"><?= $status_label ?></span>
               </td>
-              <td><?= date($date_format, strtotime($art['published_at'])) ?></td>
+              <td><?= nc_date($date_format, strtotime($art['published_at'])) ?></td>
               <td class="nc-text-right nc-actions-cell">
                 <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=edit-article&article_id=<?= (int)$art['id'] ?>" class="nc-btn-action" title="<?= i18n_r('NewsCenter/EDIT') ?>"><?= $svgEdit ?></a>
                 <a href="load.php?id=<?= NC_PLUGIN_ID ?>&action=articles&do=delete&article_id=<?= (int)$art['id'] ?>&nc_csrf=<?= nc_csrf_token() ?>" 
