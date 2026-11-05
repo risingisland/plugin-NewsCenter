@@ -17,6 +17,7 @@ if (!function_exists('nc_reset_default_templates')) {
       <time datetime="{{article.date_raw}}">{{article.date}}</time>
       <span class="nc-author">By <span class="nc-authors">{{article.authors}}</span></span>
       <span class="nc-categories">{{article.categories}}</span>
+      <span class="nc-share-slot">{{article.share}}</span>
     </div>
   </header>
   {{if:article.has_image}}
@@ -46,6 +47,7 @@ if (!function_exists('nc_reset_default_templates')) {
     <div class="nc-meta">
       <time>{{article.date}}</time>
       <span class="nc-author">By <span class="nc-authors">{{article.authors}}</span></span>
+      <span class="nc-share-slot">{{article.share}}</span>
     </div>
     <div class="nc-excerpt">{{article.excerpt}}</div>
     <a class="nc-read-more" href="{{article.url}}">Read More &rarr;</a>
@@ -61,9 +63,12 @@ if (!function_exists('nc_reset_default_templates')) {
   </div>
   {{/if:category.has_image}}
   <div class="nc-archive-info">
-    <h1 class="nc-archive-title">{{category.name}}</h1>
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+      <h1 class="nc-archive-title" style="margin:0;">{{category.name}}</h1>
+      <div>{{category.share}}</div>
+    </div>
     {{if:category.has_description}}
-    <div class="nc-archive-desc">{{category.description}}</div>
+    <div class="nc-archive-desc" style="margin-top:10px;">{{category.description}}</div>
     {{/if:category.has_description}}
   </div>
 </header>
@@ -80,9 +85,12 @@ if (!function_exists('nc_reset_default_templates')) {
   </div>
   {{/if:author.has_image}}
   <div class="nc-archive-info">
-    <h1 class="nc-archive-title">Articles by {{author.name}}</h1>
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+      <h1 class="nc-archive-title" style="margin:0;">Articles by {{author.name}}</h1>
+      <div>{{author.share}}</div>
+    </div>
     {{if:author.has_bio}}
-    <div class="nc-author-bio-full">{{author.bio}}</div>
+    <div class="nc-author-bio-full" style="margin-top:10px;">{{author.bio}}</div>
     {{/if:author.has_bio}}
   </div>
 </header>
@@ -114,6 +122,7 @@ if (!function_exists('nc_reset_default_templates')) {
     <div class="nc-home-card-meta">
       <span class="nc-home-card-date">{{article.date}}</span>
       <span class="nc-home-card-author">By <span class="nc-authors">{{article.authors}}</span></span>
+      <span class="nc-share-slot" style="margin-left:auto;">{{article.share}}</span>
     </div>
     <h3 class="nc-home-card-title"><a href="{{article.url}}">{{article.title}}</a></h3>
     <p class="nc-home-card-excerpt">{{article.excerpt}}</p>
@@ -141,7 +150,10 @@ if (!function_exists('nc_reset_default_templates')) {
   </div>
   {{/if:author.has_image}}
   <div class="nc-author-card-body">
-    <h3 class="nc-author-name"><a href="{{author.url}}">{{author.name}}</a></h3>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 class="nc-author-name" style="margin:0;"><a href="{{author.url}}">{{author.name}}</a></h3>
+      <div>{{author.share}}</div>
+    </div>
     <span class="nc-author-count">{{author.count}} Articles</span>
     {{if:author.has_bio}}
     <p class="nc-author-bio">{{author.bio}}</p>
@@ -170,7 +182,10 @@ if (!function_exists('nc_reset_default_templates')) {
   </div>
   {{/if:category.has_image}}
   <div class="nc-category-card-body">
-    <h3 class="nc-category-title"><a href="{{category.url}}">{{category.name}}</a></h3>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 class="nc-category-title" style="margin:0;"><a href="{{category.url}}">{{category.name}}</a></h3>
+      <div>{{category.share}}</div>
+    </div>
     <span class="nc-category-count">{{category.count}} Articles</span>
     {{if:category.has_description}}
     <p class="nc-category-desc">{{category.description}}</p>
@@ -183,19 +198,29 @@ if (!function_exists('nc_reset_default_templates')) {
                 'title'   => 'Frontend CSS Stylesheet',
                 'content' => '/* NewsCenter Frontend Core Styles */
 .nc-news-feed { display: flex; flex-direction: column; gap: 24px; margin: 20px 0; }
-.nc-card { display: flex; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-.nc-card-image { flex: 0 0 240px; background: #f1f5f9; }
+.nc-card { display: flex; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: visible; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.nc-card-image { flex: 0 0 240px; background: #f1f5f9; border-top-left-radius: 7px; border-bottom-left-radius: 7px; overflow: hidden; }
 .nc-card-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .nc-card-body { padding: 20px; display: flex; flex-direction: column; flex: 1; }
 .nc-card-title { margin: 0 0 8px 0; font-size: 20px; }
 .nc-card-title a { color: #0f172a; text-decoration: none; }
-.nc-meta { font-size: 13px; color: #64748b; margin-bottom: 12px; display: flex; gap: 12px; }
+.nc-meta { font-size: 13px; color: #64748b; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .nc-meta a { color: #64748b; text-decoration: none; }
 .nc-meta a:hover { color: #2563eb; text-decoration: underline; }
 .nc-authors a { color: inherit; text-decoration: none; font-weight: 500; }
 .nc-authors a:hover { color: #2563eb; text-decoration: underline; }
 .nc-excerpt { font-size: 14px; line-height: 1.6; color: #475569; margin-bottom: 15px; flex-grow: 1; }
 .nc-read-more { font-size: 13px; color: #2563eb; text-decoration: none; font-weight: 600; }
+
+/* Share Dropdown Button */
+.nc-share-container { position: relative; display: inline-block; vertical-align: middle; z-index: 50; }
+.nc-share-container.active { z-index: 10001; }
+.nc-share-trigger { display: inline-flex; align-items: center; gap: 5px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 9px; font-size: 12px; color: #334155; cursor: pointer; transition: all 0.2s ease; line-height: 1.2; }
+.nc-share-trigger:hover { background: #e2e8f0; color: #0f172a; }
+.nc-share-dropdown { display: none; position: absolute; top: calc(100% + 6px); right: 0; z-index: 10002; min-width: 155px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1); padding: 6px 0; }
+.nc-share-container.active .nc-share-dropdown { display: flex !important; flex-direction: column; }
+.nc-share-item { display: flex; align-items: center; gap: 9px; padding: 8px 14px; font-size: 12.5px; color: #334155; text-decoration: none; background: none; border: none; width: 100%; text-align: left; cursor: pointer; box-sizing: border-box; transition: background 0.15s ease, color 0.15s ease; }
+.nc-share-item:hover { background: #f8fafc; color: #2563eb; }
 
 /* Archive Headers */
 .nc-archive-header { display: flex; flex-direction: column; gap: 16px; margin: 20px 0 30px; padding-bottom: 20px; border-bottom: 2px solid #e2e8f0; }
@@ -211,11 +236,11 @@ if (!function_exists('nc_reset_default_templates')) {
 @media (max-width: 600px) { .nc-home-news-grid { grid-template-columns: 1fr; } }
 
 /* Home Card */
-.nc-home-card { display: flex; flex-direction: column; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; text-align: left; }
-.nc-home-card-image { width: 100%; height: 200px; overflow: hidden; background: #f1f5f9; }
+.nc-home-card { display: flex; flex-direction: column; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: visible; text-align: left; position: relative; }
+.nc-home-card-image { width: 100%; height: 200px; overflow: hidden; background: #f1f5f9; border-top-left-radius: 7px; border-top-right-radius: 7px; }
 .nc-home-card-image img, .nc-home-news-grid img { width: 100%; height: 200px; object-fit: cover; display: block; }
 .nc-home-card-content { padding: 16px; display: flex; flex-direction: column; flex: 1; }
-.nc-home-card-meta { font-size: 12px; color: #64748b; margin-bottom: 8px; display: flex; gap: 10px; }
+.nc-home-card-meta { font-size: 12px; color: #64748b; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .nc-home-card-title { margin: 0 0 10px 0; font-size: 18px; line-height: 1.35; }
 .nc-home-card-title a { color: #0f172a; text-decoration: none; }
 .nc-home-card-title a:hover { color: #2563eb; text-decoration: underline; }
@@ -236,10 +261,10 @@ if (!function_exists('nc_reset_default_templates')) {
 
 /* Authors & Categories Cards */
 .nc-authors-grid, .nc-categories-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-.nc-author-card, .nc-category-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; padding: 18px; display: flex; flex-direction: column; }
+.nc-author-card, .nc-category-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: visible; padding: 18px; display: flex; flex-direction: column; position: relative; }
 .nc-author-avatar-wrap { margin-bottom: 12px; }
 .nc-author-avatar { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; display: block; border: 2px solid #e2e8f0; }
-.nc-category-img-wrap { margin: -18px -18px 14px -18px; }
+.nc-category-img-wrap { margin: -18px -18px 14px -18px; border-top-left-radius: 7px; border-top-right-radius: 7px; overflow: hidden; }
 .nc-category-thumb { width: 100%; height: 140px; object-fit: cover; display: block; }
 .nc-author-name, .nc-category-title { margin: 0 0 6px 0; font-size: 19px; }
 .nc-author-count, .nc-category-count { font-size: 12px; color: #64748b; margin-bottom: 10px; display: block; }
@@ -264,21 +289,18 @@ if (!function_exists('nc_render_template')) {
             return '';
         }
 
-        // 1. Process Conditionals: {{if:key}}...{{/if:key}}
         $template_str = preg_replace_callback('/\{\{if:([a-zA-Z0-9_\.]+)\}\}(.*?)\{\{\/if:\1\}\}/s', function($matches) use ($vars) {
             $key = $matches[1];
             $inner = $matches[2];
             return (!empty($vars[$key])) ? $inner : '';
         }, $template_str);
 
-        // 2. Process Negated Conditionals: {{ifnot:key}}...{{/ifnot:key}}
         $template_str = preg_replace_callback('/\{\{ifnot:([a-zA-Z0-9_\.]+)\}\}(.*?)\{\{\/ifnot:\1\}\}/s', function($matches) use ($vars) {
             $key = $matches[1];
             $inner = $matches[2];
             return (empty($vars[$key])) ? $inner : '';
         }, $template_str);
 
-        // 3. Process Value Placeholders: {{key}}
         $template_str = preg_replace_callback('/\{\{([a-zA-Z0-9_\.]+)\}\}/', function($matches) use ($vars) {
             $key = $matches[1];
             return isset($vars[$key]) ? (string)$vars[$key] : '';

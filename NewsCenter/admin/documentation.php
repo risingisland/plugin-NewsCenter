@@ -257,7 +257,12 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
         <tr>
           <td><code>{{article.featured_image_thumb}}</code></td>
           <td>List, Home, Single</td>
-          <td>Optimized thumbnail URL of the featured image for faster loading in feeds and grids.</td>
+          <td>Optimized thumbnail URL of the featured image (using <code>data/thumbs/thumbnail.[name]</code>).</td>
+        </tr>
+        <tr>
+          <td><code>{{article.share}}</code></td>
+          <td>Single, List, Home</td>
+          <td>Interactive dropdown button offering Copy Link, X (Twitter), Facebook, WhatsApp, and Email.</td>
         </tr>
         <tr>
           <td><code>{{article.excerpt}}</code></td>
@@ -272,7 +277,7 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
         <tr>
           <td><code>{{article.date}}</code></td>
           <td>Single, List, Home</td>
-          <td>Formatted date matching your settings.</td>
+          <td>Formatted date matching your settings and locale.</td>
         </tr>
         <tr>
           <td><code>{{article.date_raw}}</code></td>
@@ -291,27 +296,27 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
         </tr>
         <tr>
           <td><code>{{author.name}}</code></td>
-          <td>Author Item</td>
+          <td>Author Archive, Author Item</td>
           <td>Author's display name.</td>
         </tr>
         <tr>
           <td><code>{{author.slug}}</code></td>
-          <td>Author Item</td>
+          <td>Author Archive, Author Item</td>
           <td>Author's slug string.</td>
         </tr>
         <tr>
           <td><code>{{author.image}}</code></td>
-          <td>Author Item</td>
+          <td>Author Archive, Author Item</td>
           <td>URL of the author's avatar/photo.</td>
         </tr>
         <tr>
           <td><code>{{author.bio}}</code></td>
-          <td>Author Item</td>
+          <td>Author Archive, Author Item</td>
           <td>Author's biographical text.</td>
         </tr>
         <tr>
           <td><code>{{author.url}}</code></td>
-          <td>Author Item</td>
+          <td>Author Archive, Author Item</td>
           <td>URL to the author's article archive.</td>
         </tr>
         <tr>
@@ -320,33 +325,38 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
           <td>Number of published articles by this author.</td>
         </tr>
         <tr>
+          <td><code>{{author.share}}</code></td>
+          <td>Author Archive, Author Item</td>
+          <td>Interactive share dropdown for this author profile URL.</td>
+        </tr>
+        <tr>
           <td><code>{{authors.items}}</code></td>
           <td>Authors List Container</td>
           <td>Renders all individual author cards.</td>
         </tr>
         <tr>
           <td><code>{{category.name}}</code></td>
-          <td>Category Item</td>
+          <td>Category Archive, Category Item</td>
           <td>Category display name.</td>
         </tr>
         <tr>
           <td><code>{{category.slug}}</code></td>
-          <td>Category Item</td>
+          <td>Category Archive, Category Item</td>
           <td>Category slug.</td>
         </tr>
         <tr>
           <td><code>{{category.image}}</code></td>
-          <td>Category Item</td>
+          <td>Category Archive, Category Item</td>
           <td>URL of the category's banner image.</td>
         </tr>
         <tr>
           <td><code>{{category.description}}</code></td>
-          <td>Category Item</td>
+          <td>Category Archive, Category Item</td>
           <td>Category description text.</td>
         </tr>
         <tr>
           <td><code>{{category.url}}</code></td>
-          <td>Category Item</td>
+          <td>Category Archive, Category Item</td>
           <td>URL to the category's article archive.</td>
         </tr>
         <tr>
@@ -355,9 +365,19 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
           <td>Number of published articles in this category.</td>
         </tr>
         <tr>
+          <td><code>{{category.share}}</code></td>
+          <td>Category Archive, Category Item</td>
+          <td>Interactive share dropdown for this category URL.</td>
+        </tr>
+        <tr>
           <td><code>{{categories.items}}</code></td>
           <td>Categories List Container</td>
           <td>Renders all individual category cards.</td>
+        </tr>
+        <tr>
+          <td><code>{{articles.list}}</code></td>
+          <td>Category Archive, Author Archive</td>
+          <td>Rendered list of article cards matching the active archive view.</td>
         </tr>
         <tr>
           <td><code>{{section.title}}</code></td>
@@ -389,7 +409,7 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
         <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)"><?= $svgCopy ?> Copy</button>
       </div>
       <pre><code>{{if:article.has_image}}
-  &lt;div class="featured-img"&gt;&lt;img src="{{article.featured_image}}" alt="{{article.title}}"&gt;&lt;/div&gt;
+  &lt;div class="featured-img"&gt;&lt;img src="{{article.featured_image_thumb}}" alt="{{article.title}}"&gt;&lt;/div&gt;
 {{/if:article.has_image}}
 
 {{if:article.has_author_image}}

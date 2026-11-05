@@ -2,7 +2,7 @@
 /**
  * Plugin Name: NewsCenter
  * Description: Modern news and article management plugin for GetSimple CMS CE with SQLite, Autumnnote, and CodeMirror.
- * Version: 1.0.1
+ * Version: 1.0.3
  * Author: risingisland
  * Website: https://github.com/risingisland
  */
