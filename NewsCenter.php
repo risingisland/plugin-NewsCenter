@@ -10,7 +10,7 @@
 if (!defined('IN_GS')) { die('You cannot load this page directly.'); }
 
 # Constants & Paths
-define('NC_VERSION', '1.0.1');
+define('NC_VERSION', '1.0.3');
 define('NC_PLUGIN_ID', 'NewsCenter');
 
 # Filesystem Paths
