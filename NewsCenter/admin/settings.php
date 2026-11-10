@@ -22,12 +22,45 @@ if ($page_files) {
         return strcmp($a['title'], $b['title']);
     });
 }
+
+// 1. Check for SimpleBlog database
+$sb_db_file = defined('GSDATAOTHERPATH') ? GSDATAOTHERPATH . 'blog.db' : '';
+$sb_exists = file_exists($sb_db_file);
+$sb_post_count = 0;
+$sb_cat_count = 0;
+
+if ($sb_exists) {
+    try {
+        $sb_db = new SQLite3($sb_db_file, SQLITE3_OPEN_READONLY);
+        $sb_post_count = (int)$sb_db->querySingle("SELECT COUNT(*) FROM posts");
+        $sb_cat_count  = (int)$sb_db->querySingle("SELECT COUNT(*) FROM categories");
+        $sb_db->close();
+    } catch (\Throwable $e) {
+        $sb_exists = false;
+    }
+}
+
+// 2. Check for News Manager posts
+$nm_posts_dir = defined('GSDATAPATH') ? GSDATAPATH . 'posts/' : '';
+$nm_files = is_dir($nm_posts_dir) ? glob($nm_posts_dir . '*.xml') : [];
+$nm_exists = !empty($nm_files);
+$nm_post_count = count($nm_files);
 ?>
 
 <div class="nc-container">
   <div class="nc-page-header">
     <h2><?= i18n_r('NewsCenter/SETTINGS_TITLE') ?></h2>
   </div>
+
+  <?php if (isset($_GET['status']) && $_GET['status'] === 'migrated'): ?>
+    <div class="nc-alert nc-alert-success" style="background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; border-radius:6px; padding:12px 16px; margin-bottom:20px; font-weight:500;">
+      <?= !empty($_GET['msg']) ? htmlspecialchars((string)urldecode($_GET['msg']), ENT_QUOTES, 'UTF-8') : i18n_r('NewsCenter/MIGRATION_SUCCESS') ?>
+    </div>
+  <?php elseif (isset($_GET['status']) && $_GET['status'] === 'error' && !empty($_GET['msg'])): ?>
+    <div class="nc-alert nc-alert-error" style="background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; border-radius:6px; padding:12px 16px; margin-bottom:20px; font-weight:500;">
+      <?= htmlspecialchars((string)urldecode($_GET['msg']), ENT_QUOTES, 'UTF-8') ?>
+    </div>
+  <?php endif; ?>
 
   <div class="nc-card">
     <form action="load.php?id=<?= NC_PLUGIN_ID ?>&action=save_settings" method="POST">
@@ -39,8 +72,8 @@ if ($page_files) {
           <select id="nc-select-page" class="nc-select" style="max-width:320px;">
             <option value=""><?= i18n_r('NewsCenter/CHOOSE_EXISTING_PAGE') ?></option>
             <?php foreach ($pages as $p): ?>
-              <option value="<?= htmlspecialchars($p['slug']) ?>" <?= ($p['slug'] === $active_slug) ? 'selected' : '' ?>>
-                <?= htmlspecialchars($p['title']) ?> (<?= htmlspecialchars($p['slug']) ?>)
+              <option value="<?= htmlspecialchars((string)$p['slug'], ENT_QUOTES, 'UTF-8') ?>" <?= ($p['slug'] === $active_slug) ? 'selected' : '' ?>>
+                <?= htmlspecialchars((string)$p['title'], ENT_QUOTES, 'UTF-8') ?> (<?= htmlspecialchars((string)$p['slug'], ENT_QUOTES, 'UTF-8') ?>)
               </option>
             <?php endforeach; ?>
           </select>
@@ -50,7 +83,7 @@ if ($page_files) {
 
       <div class="nc-form-group">
         <label for="page_slug"><?= i18n_r('NewsCenter/SETTING_PAGE_SLUG') ?></label>
-        <input type="text" id="page_slug" name="page_slug" value="<?= htmlspecialchars($active_slug) ?>" class="nc-input" style="max-width:320px;" required>
+        <input type="text" id="page_slug" name="page_slug" value="<?= htmlspecialchars((string)$active_slug, ENT_QUOTES, 'UTF-8') ?>" class="nc-input" style="max-width:320px;" required>
         <span class="nc-help-text"><?= i18n_r('NewsCenter/SETTING_PAGE_SLUG_HELP') ?></span>
       </div>
 
@@ -80,7 +113,7 @@ if ($page_files) {
       <div class="nc-form-row">
         <div class="nc-form-group nc-col-half">
           <label for="date_format"><?= i18n_r('NewsCenter/SETTING_DATE_FORMAT') ?></label>
-          <input type="text" id="date_format" name="date_format" value="<?= htmlspecialchars($settings['date_format'] ?? 'F j, Y') ?>" class="nc-input">
+          <input type="text" id="date_format" name="date_format" value="<?= htmlspecialchars((string)($settings['date_format'] ?? 'F j, Y'), ENT_QUOTES, 'UTF-8') ?>" class="nc-input">
           <span class="nc-help-text"><?= i18n_r('NewsCenter/SETTING_DATE_FORMAT_HELP') ?></span>
         </div>
 
@@ -100,13 +133,61 @@ if ($page_files) {
     </form>
   </div>
 
+  <!-- Migration from Other Plugins -->
+  <?php if ($sb_exists || $nm_exists): ?>
+  <div class="nc-card" style="margin-top:25px;">
+    <div class="nc-card-header">
+      <h3 style="margin:0;"><?= i18n_r('NewsCenter/MIGRATION_TITLE') ?></h3>
+    </div>
+    <div style="padding:16px 0; display:flex; flex-direction:column; gap:20px;">
+      
+      <?php if ($sb_exists): ?>
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:16px;">
+        <h4 style="margin:0 0 6px 0; font-size:15px; color:#1e293b;">SimpleBlog</h4>
+        <p style="font-size:13px; color:var(--nc-text); margin:0 0 10px 0;">
+          <?= i18n_r('NewsCenter/MIGRATE_SB_DETECTED') ?>
+        </p>
+        <div style="font-size:12.5px; color:var(--nc-text-muted); margin-bottom:12px;">
+          &bull; <strong><?= $sb_post_count ?></strong> <?= i18n_r('NewsCenter/POSTS') ?> &bull; <strong><?= $sb_cat_count ?></strong> <?= i18n_r('NewsCenter/CATEGORIES') ?>
+        </div>
+        <form action="load.php?id=<?= NC_PLUGIN_ID ?>&action=migrate_simpleblog" method="POST" onsubmit="return confirm(<?= json_encode(i18n_r('NewsCenter/MIGRATE_SB_CONFIRM')) ?>);">
+          <input type="hidden" name="nc_csrf" value="<?= nc_csrf_token() ?>">
+          <button type="submit" class="nc-btn nc-btn-primary" style="background:#4f46e5; border-color:#4338ca;">
+            &#128229; <?= i18n_r('NewsCenter/MIGRATE_SB_BTN') ?>
+          </button>
+        </form>
+      </div>
+      <?php endif; ?>
+
+      <?php if ($nm_exists): ?>
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:16px;">
+        <h4 style="margin:0 0 6px 0; font-size:15px; color:#1e293b;">News Manager</h4>
+        <p style="font-size:13px; color:var(--nc-text); margin:0 0 10px 0;">
+          <?= i18n_r('NewsCenter/MIGRATE_NM_DETECTED') ?>
+        </p>
+        <div style="font-size:12.5px; color:var(--nc-text-muted); margin-bottom:12px;">
+          &bull; <strong><?= $nm_post_count ?></strong> <?= i18n_r('NewsCenter/POSTS') ?> in <code>data/posts/</code>
+        </div>
+        <form action="load.php?id=<?= NC_PLUGIN_ID ?>&action=migrate_news_manager" method="POST" onsubmit="return confirm(<?= json_encode(i18n_r('NewsCenter/MIGRATE_NM_CONFIRM')) ?>);">
+          <input type="hidden" name="nc_csrf" value="<?= nc_csrf_token() ?>">
+          <button type="submit" class="nc-btn nc-btn-primary" style="background:#0284c7; border-color:#0369a1;">
+            &#128229; <?= i18n_r('NewsCenter/MIGRATE_NM_BTN') ?>
+          </button>
+        </form>
+      </div>
+      <?php endif; ?>
+
+    </div>
+  </div>
+  <?php endif; ?>
+
   <!-- Sitemap Rebuilder Card -->
   <div class="nc-card" style="margin-top:25px;">
     <div class="nc-card-header" style="display:flex; justify-content:space-between; align-items:center;">
       <h3 style="margin:0;"><?= i18n_r('NewsCenter/SITEMAP_MAINTENANCE') ?></h3>
       <form action="load.php?id=<?= NC_PLUGIN_ID ?>&action=rebuild_sitemap" method="POST" style="margin:0;">
         <input type="hidden" name="nc_csrf" value="<?= nc_csrf_token() ?>">
-        <button type="submit" class="nc-btn nc-btn-small nc-btn-secondary"><?= $svgRefresh ?> <?= i18n_r('NewsCenter/REBUILD_SITEMAP_NOW') ?></button>
+        <button type="submit" class="nc-btn nc-btn-small nc-btn-secondary"><?= $svgRefresh ?? '🔄' ?> <?= i18n_r('NewsCenter/REBUILD_SITEMAP_NOW') ?></button>
       </form>
     </div>
     <p style="font-size:13px; color:var(--nc-text-muted); margin:0;">
@@ -118,20 +199,20 @@ if ($page_files) {
   <div class="nc-card" style="margin-top:25px;">
     <div class="nc-card-header" style="display:flex; justify-content:space-between; align-items:center;">
       <h3 style="margin:0;"><?= i18n_r('NewsCenter/HTACCESS_RULES') ?></h3>
-      <button type="button" class="nc-btn nc-btn-small nc-btn-primary" id="nc-copy-rules-btn" onclick="ncCopyHtaccess()"><?= $svgCopy ?> <?= i18n_r('NewsCenter/COPY_RULES') ?></button>
+      <button type="button" class="nc-btn nc-btn-small nc-btn-primary" id="nc-copy-rules-btn" onclick="ncCopyHtaccess()"><?= $svgCopy ?? '📋' ?> <?= i18n_r('NewsCenter/COPY_RULES') ?></button>
     </div>
     <p style="font-size:13px; color:var(--nc-text-muted); margin:0 0 12px 0;">
       <?= i18n_r('NewsCenter/HTACCESS_HELP') ?>
     </p>
 
     <div style="background:#0f172a; border-radius:6px; overflow:hidden; border:1px solid #1e293b;">
-      <pre style="margin:0; padding:16px; font-family:'Consolas','Monaco',monospace; font-size:13px; color:#f8fafc; overflow-x:auto; line-height:1.6;" id="nc-htaccess-code"><code># NewsCenter Fancy Sub-paths for "<?= htmlspecialchars($active_slug) ?>"
-RewriteRule ^<?= htmlspecialchars($active_slug) ?>/post/([A-Za-z0-9_-]+)/?$ index.php?id=<?= htmlspecialchars($active_slug) ?>&post=$1 [QSA,L]
-RewriteRule ^<?= htmlspecialchars($active_slug) ?>/category/([A-Za-z0-9_-]+)/?$ index.php?id=<?= htmlspecialchars($active_slug) ?>&category=$1 [QSA,L]
-RewriteRule ^<?= htmlspecialchars($active_slug) ?>/tag/([A-Za-z0-9_-]+)/?$ index.php?id=<?= htmlspecialchars($active_slug) ?>&tag=$1 [QSA,L]
-RewriteRule ^<?= htmlspecialchars($active_slug) ?>/author/([A-Za-z0-9_-]+)/?$ index.php?id=<?= htmlspecialchars($active_slug) ?>&author=$1 [QSA,L]
-RewriteRule ^<?= htmlspecialchars($active_slug) ?>/archive/([0-9]{4}-[0-9]{2})/?$ index.php?id=<?= htmlspecialchars($active_slug) ?>&archive=$1 [QSA,L]
-RewriteRule ^<?= htmlspecialchars($active_slug) ?>/page/([0-9]+)/?$ index.php?id=<?= htmlspecialchars($active_slug) ?>&page=$1 [QSA,L]</code></pre>
+      <pre style="margin:0; padding:16px; font-family:'Consolas','Monaco',monospace; font-size:13px; color:#f8fafc; overflow-x:auto; line-height:1.6;" id="nc-htaccess-code"><code># NewsCenter Fancy Sub-paths for "<?= htmlspecialchars((string)$active_slug, ENT_QUOTES, 'UTF-8') ?>"
+RewriteRule ^<?= htmlspecialchars((string)$active_slug, ENT_QUOTES, 'UTF-8') ?>/post/([A-Za-z0-9_-]+)/?$ index.php?id=<?= htmlspecialchars((string)$active_slug, ENT_QUOTES, 'UTF-8') ?>&post=$1 [QSA,L]
+RewriteRule ^<?= htmlspecialchars((string)$active_slug, ENT_QUOTES, 'UTF-8') ?>/category/([A-Za-z0-9_-]+)/?$ index.php?id=<?= htmlspecialchars((string)$active_slug, ENT_QUOTES, 'UTF-8') ?>&category=$1 [QSA,L]
+RewriteRule ^<?= htmlspecialchars((string)$active_slug, ENT_QUOTES, 'UTF-8') ?>/tag/([A-Za-z0-9_-]+)/?$ index.php?id=<?= htmlspecialchars((string)$active_slug, ENT_QUOTES, 'UTF-8') ?>&tag=$1 [QSA,L]
+RewriteRule ^<?= htmlspecialchars((string)$active_slug, ENT_QUOTES, 'UTF-8') ?>/author/([A-Za-z0-9_-]+)/?$ index.php?id=<?= htmlspecialchars((string)$active_slug, ENT_QUOTES, 'UTF-8') ?>&author=$1 [QSA,L]
+RewriteRule ^<?= htmlspecialchars((string)$active_slug, ENT_QUOTES, 'UTF-8') ?>/archive/([0-9]{4}-[0-9]{2})/?$ index.php?id=<?= htmlspecialchars((string)$active_slug, ENT_QUOTES, 'UTF-8') ?>&archive=$1 [QSA,L]
+RewriteRule ^<?= htmlspecialchars((string)$active_slug, ENT_QUOTES, 'UTF-8') ?>/page/([0-9]+)/?$ index.php?id=<?= htmlspecialchars((string)$active_slug, ENT_QUOTES, 'UTF-8') ?>&page=$1 [QSA,L]</code></pre>
     </div>
   </div>
 </div>

@@ -61,7 +61,7 @@ $i18n = [
     'TPL_CATEGORIES_LIST'      => 'Contenedor de cuadrícula de directorio de categorías (categories_list)',
     'TPL_CATEGORY_ITEM'        => 'Elemento de tarjeta de categoría (category_item)',
     'TPL_FRONTEND_CSS'         => 'Hoja de estilos CSS pública (frontend_css)',
-	'TPL_CATEGORY_ARCHIVE'     => 'Plantilla de vista de archivo de categoría (category_archive)',
+    'TPL_CATEGORY_ARCHIVE'     => 'Plantilla de vista de archivo de categoría (category_archive)',
     'TPL_AUTHOR_ARCHIVE'       => 'Plantilla de vista de archivo de autor (author_archive)',
     'VIEW_TAG_DOCS'            => 'Ver documentación de etiquetas',
     'DOCS_TITLE'               => 'Documentación y guía de integración de Centro de Noticias',
@@ -205,7 +205,7 @@ $i18n = [
     'SAVE_SETTINGS'            => 'Guardar Configuración',
     'SEARCH_RESULTS_FOR'       => 'Resultados de búsqueda para',
     'GALLERY'                  => 'Galería',
-	    'EDITOR_PLACEHOLDER'       => 'Escribe aquí el contenido de tu artículo...',
+    'EDITOR_PLACEHOLDER'       => 'Escribe aquí el contenido de tu artículo...',
     'IMAGES_SELECTED'          => '{count} imágenes seleccionadas',
     'IMAGE_SELECTED_ONE'       => '1 imagen seleccionada',
     'NO_IMAGES_FOUND'          => 'No se encontraron imágenes en las subidas.',
@@ -214,6 +214,17 @@ $i18n = [
     'UPLOAD_FAILED'            => 'Error al subir.',
     'DRAG_TO_REORDER'          => 'Arrastra para reordenar',
     'REMOVE_IMAGE'             => 'Quitar imagen',
+
+    // Migrations
+    'MIGRATION_TITLE'          => 'Migración de Datos desde Otros Plugins',
+    'MIGRATE_SB_DETECTED'      => 'Se ha detectado una base de datos de SimpleBlog en esta instalación. Puedes importar todas las publicaciones, categorías y etiquetas directamente en NewsCenter.',
+    'MIGRATE_SB_BTN'           => 'Importar Datos de SimpleBlog',
+    'MIGRATE_SB_CONFIRM'       => '¿Estás seguro de que deseas importar los datos de SimpleBlog? Se copiarán las entradas, categorías y etiquetas en NewsCenter sin eliminar tu base de datos de SimpleBlog.',
+    'MIGRATE_NM_DETECTED'      => 'Se han detectado publicaciones XML de News Manager en esta instalación. Puedes importar todos los artículos, etiquetas y autores directamente en NewsCenter.',
+    'MIGRATE_NM_BTN'           => 'Importar Datos de News Manager',
+    'MIGRATE_NM_CONFIRM'       => '¿Estás seguro de que deseas importar los datos de News Manager? Se copiarán los artículos y etiquetas en NewsCenter sin modificar los archivos XML de News Manager.',
+    'MIGRATION_SUCCESS'        => '¡Datos importados con éxito!',
+    'POSTS'                    => 'Entradas',
 
     // Day and month names used by nc_date()
     'DAY_0' => 'domingo',

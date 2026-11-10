@@ -61,7 +61,7 @@ $i18n = [
     'TPL_CATEGORIES_LIST'      => 'Categories Directory Grid Container (categories_list)',
     'TPL_CATEGORY_ITEM'        => 'Category Card Item (category_item)',
     'TPL_FRONTEND_CSS'         => 'Frontend CSS Stylesheet (frontend_css)',
-	'TPL_CATEGORY_ARCHIVE'     => 'Category Archive View Template (category_archive)',
+    'TPL_CATEGORY_ARCHIVE'     => 'Category Archive View Template (category_archive)',
     'TPL_AUTHOR_ARCHIVE'       => 'Author Archive View Template (author_archive)',
     'VIEW_TAG_DOCS'            => 'View Tag Docs',
     'DOCS_TITLE'               => 'News Center Documentation & Integration Guide',
@@ -214,6 +214,17 @@ $i18n = [
     'UPLOAD_FAILED'            => 'Upload failed.',
     'DRAG_TO_REORDER'          => 'Drag to reorder',
     'REMOVE_IMAGE'             => 'Remove image',
+
+    // Migrations
+    'MIGRATION_TITLE'          => 'Data Migration from Other Plugins',
+    'MIGRATE_SB_DETECTED'      => 'A SimpleBlog database was detected on this installation. You can import all posts, categories, and tags directly into NewsCenter.',
+    'MIGRATE_SB_BTN'           => 'Import Data from SimpleBlog',
+    'MIGRATE_SB_CONFIRM'       => 'Are you sure you want to import data from SimpleBlog? This will copy all posts, categories, and tags into NewsCenter without deleting your SimpleBlog database.',
+    'MIGRATE_NM_DETECTED'      => 'News Manager XML posts were detected on this installation. You can import all articles, tags, and authors directly into NewsCenter.',
+    'MIGRATE_NM_BTN'           => 'Import Data from News Manager',
+    'MIGRATE_NM_CONFIRM'       => 'Are you sure you want to import data from News Manager? This will copy all posts and tags into NewsCenter without modifying your News Manager XML files.',
+    'MIGRATION_SUCCESS'        => 'Data successfully imported!',
+    'POSTS'                    => 'Posts',
 
     // Day and month names used by nc_date()
     'DAY_0' => 'Sunday',

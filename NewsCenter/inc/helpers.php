@@ -281,6 +281,358 @@ function nc_ajax_get_media() {
 }
 
 /**
+ * Migrates posts, categories, and tags from SimpleBlog SQLite database (blog.db) into NewsCenter.
+ */
+function nc_migrate_from_simpleblog() {
+    $sb_file = defined('GSDATAOTHERPATH') ? GSDATAOTHERPATH . 'blog.db' : '';
+    if (!file_exists($sb_file)) {
+        return ['ok' => false, 'error' => 'SimpleBlog database (data/other/blog.db) not found.'];
+    }
+
+    try {
+        $sb_db = new SQLite3($sb_file, SQLITE3_OPEN_READONLY);
+    } catch (\Throwable $e) {
+        return ['ok' => false, 'error' => 'Could not open SimpleBlog database: ' . $e->getMessage()];
+    }
+
+    $nc_db = nc_get_db();
+    $counts = ['posts' => 0, 'categories' => 0, 'tags' => 0];
+
+    // Ensure default author exists
+    $default_author_name = defined('USR') ? USR : 'admin';
+    $au_stmt = $nc_db->prepare("SELECT id FROM nc_authors WHERE name = ? LIMIT 1");
+    $au_stmt->execute([$default_author_name]);
+    $author_id = $au_stmt->fetchColumn();
+
+    if (!$author_id) {
+        $ins_au = $nc_db->prepare("INSERT INTO nc_authors (name, slug, bio, image) VALUES (?, ?, '', '')");
+        $ins_au->execute([$default_author_name, nc_sanitize_slug($default_author_name)]);
+        $author_id = (int)$nc_db->lastInsertId();
+    }
+
+    // 1. Migrate Categories
+    $category_id_map = [];
+    $sb_cats = $sb_db->query("SELECT * FROM categories");
+    if ($sb_cats) {
+        while ($cat = $sb_cats->fetchArray(SQLITE3_ASSOC)) {
+            $cat_name = trim((string)$cat['name']);
+            $cat_slug = nc_sanitize_slug($cat['slug'] ?: $cat_name);
+
+            $chk = $nc_db->prepare("SELECT id FROM nc_categories WHERE slug = ? OR name = ? LIMIT 1");
+            $chk->execute([$cat_slug, $cat_name]);
+            $existing_id = $chk->fetchColumn();
+
+            if ($existing_id) {
+                $category_id_map[$cat['id']] = (int)$existing_id;
+            } else {
+                $ins_cat = $nc_db->prepare("INSERT INTO nc_categories (name, slug, description, image) VALUES (?, ?, '', '')");
+                $ins_cat->execute([$cat_name, $cat_slug]);
+                $new_id = (int)$nc_db->lastInsertId();
+                $category_id_map[$cat['id']] = $new_id;
+                $counts['categories']++;
+            }
+        }
+    }
+
+    // 2. Migrate Tags
+    $tag_id_map = [];
+    $sb_tags = $sb_db->query("SELECT * FROM tags");
+    if ($sb_tags) {
+        while ($t = $sb_tags->fetchArray(SQLITE3_ASSOC)) {
+            $t_name = trim((string)$t['name']);
+            $t_slug = nc_sanitize_slug($t['slug'] ?: $t_name);
+
+            $chk = $nc_db->prepare("SELECT id FROM nc_tags WHERE slug = ? OR name = ? LIMIT 1");
+            $chk->execute([$t_slug, $t_name]);
+            $existing_id = $chk->fetchColumn();
+
+            if ($existing_id) {
+                $tag_id_map[$t['id']] = (int)$existing_id;
+            } else {
+                $ins_tag = $nc_db->prepare("INSERT INTO nc_tags (name, slug) VALUES (?, ?)");
+                $ins_tag->execute([$t_name, $t_slug]);
+                $new_id = (int)$nc_db->lastInsertId();
+                $tag_id_map[$t['id']] = $new_id;
+                $counts['tags']++;
+            }
+        }
+    }
+
+    // 3. Migrate Posts
+    $sb_posts = $sb_db->query("SELECT * FROM posts ORDER BY id ASC");
+    if ($sb_posts) {
+        while ($p = $sb_posts->fetchArray(SQLITE3_ASSOC)) {
+            $title   = trim((string)$p['title']);
+            $slug    = nc_sanitize_slug($p['slug'] ?: $title);
+            $content = (string)$p['content'];
+            $excerpt = (string)($p['description'] ?? '');
+            $meta_d  = (string)($p['metadata'] ?? '');
+
+            $pub_ts  = !empty($p['date']) ? (int)$p['date'] : time();
+            $upd_ts  = !empty($p['updated_at']) ? (int)$p['updated_at'] : $pub_ts;
+            $pub_at  = date('Y-m-d H:i:s', $pub_ts);
+            $upd_at  = date('Y-m-d H:i:s', $upd_ts);
+            $status  = !empty($p['published']) ? 'published' : 'draft';
+
+            $cover = trim((string)($p['cover_photo'] ?? ''));
+            if (strpos($cover, 'data/uploads/') === 0) {
+                $cover = substr($cover, strlen('data/uploads/'));
+            }
+
+            $raw_gallery = trim((string)($p['gallery'] ?? ''));
+            $decoded_gallery = json_decode($raw_gallery, true);
+            $nc_gallery = [];
+            if (is_array($decoded_gallery)) {
+                foreach ($decoded_gallery as $g_item) {
+                    if (is_string($g_item) && !empty($g_item)) {
+                        $clean_path = ltrim($g_item, '/');
+                        if (strpos($clean_path, 'data/uploads/') === 0) {
+                            $clean_path = substr($clean_path, strlen('data/uploads/'));
+                        }
+                        $nc_gallery[] = [
+                            'url'     => $clean_path,
+                            'thumb'   => function_exists('nc_thumb_url') ? nc_thumb_url($clean_path) : $clean_path,
+                            'name'    => basename($clean_path),
+                            'caption' => ''
+                        ];
+                    } elseif (is_array($g_item) && !empty($g_item['url'])) {
+                        $nc_gallery[] = $g_item;
+                    }
+                }
+            }
+            $gallery_json = json_encode($nc_gallery, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+            $base_slug = $slug;
+            $counter = 1;
+            while (true) {
+                $chk = $nc_db->prepare("SELECT id FROM nc_articles WHERE slug = ? LIMIT 1");
+                $chk->execute([$slug]);
+                if (!$chk->fetchColumn()) {
+                    break;
+                }
+                $slug = $base_slug . '-' . $counter;
+                $counter++;
+            }
+
+            $ins_art = $nc_db->prepare("
+                INSERT INTO nc_articles (slug, title, excerpt, content, featured_image, gallery, status, author, meta_title, meta_description, published_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ");
+            $ins_art->execute([
+                $slug,
+                $title,
+                $excerpt,
+                $content,
+                $cover,
+                $gallery_json,
+                $status,
+                $default_author_name,
+                $title,
+                $meta_d,
+                $pub_at,
+                $upd_at
+            ]);
+            $new_post_id = (int)$nc_db->lastInsertId();
+            $counts['posts']++;
+
+            if ($author_id > 0) {
+                $ins_aa = $nc_db->prepare("INSERT OR IGNORE INTO nc_article_authors (article_id, author_id) VALUES (?, ?)");
+                $ins_aa->execute([$new_post_id, $author_id]);
+            }
+
+            $old_cat_id = !empty($p['category_id']) ? (int)$p['category_id'] : 0;
+            if ($old_cat_id > 0 && isset($category_id_map[$old_cat_id])) {
+                $ins_ac = $nc_db->prepare("INSERT OR IGNORE INTO nc_article_categories (article_id, category_id) VALUES (?, ?)");
+                $ins_ac->execute([$new_post_id, $category_id_map[$old_cat_id]]);
+            }
+
+            $pt_stmt = $sb_db->prepare("SELECT tag_id FROM post_tags WHERE post_id = ?");
+            $pt_stmt->bindValue(1, (int)$p['id'], SQLITE3_INTEGER);
+            $pt_res = $pt_stmt->execute();
+            if ($pt_res) {
+                while ($pt = $pt_res->fetchArray(SQLITE3_ASSOC)) {
+                    $old_tag_id = (int)$pt['tag_id'];
+                    if (isset($tag_id_map[$old_tag_id])) {
+                        $ins_at = $nc_db->prepare("INSERT OR IGNORE INTO nc_article_tags (article_id, tag_id) VALUES (?, ?)");
+                        $ins_at->execute([$new_post_id, $tag_id_map[$old_tag_id]]);
+                    }
+                }
+            }
+        }
+    }
+
+    $sb_db->close();
+
+    if (function_exists('nc_generate_sitemap')) {
+        nc_generate_sitemap();
+    }
+
+    return [
+        'ok'         => true,
+        'posts'      => $counts['posts'],
+        'categories' => $counts['categories'],
+        'tags'       => $counts['tags']
+    ];
+}
+
+/**
+ * Migrates posts and tags from News Manager XML files into NewsCenter,
+ * resolving HTML entities in content, title, and metadata.
+ */
+function nc_migrate_from_news_manager() {
+    $posts_dir = defined('GSDATAPATH') ? GSDATAPATH . 'posts/' : '';
+    if (!is_dir($posts_dir)) {
+        return ['ok' => false, 'error' => 'News Manager posts directory (data/posts/) not found.'];
+    }
+
+    $files = glob($posts_dir . '*.xml');
+    if (empty($files)) {
+        return ['ok' => false, 'error' => 'No News Manager post files found in data/posts/.'];
+    }
+
+    $nc_db = nc_get_db();
+    $counts = ['posts' => 0, 'tags' => 0, 'authors' => 0];
+
+    $default_author_name = defined('USR') ? USR : 'admin';
+    $author_cache = [];
+
+    foreach ($files as $file) {
+        $slug = basename($file, '.xml');
+        $xml = @simplexml_load_file($file);
+        if (!$xml) {
+            continue;
+        }
+
+        // 1. Decode entities for title, content, and metadata
+        $raw_title = trim((string)$xml->title);
+        $title = $raw_title !== '' ? html_entity_decode($raw_title, ENT_QUOTES | ENT_HTML5, 'UTF-8') : $slug;
+
+        // Decode content (handles single and double-encoded News Manager XML dumps)
+        $content = (string)$xml->content;
+        $content = html_entity_decode($content, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        if (strpos($content, '&lt;') !== false || strpos($content, '&gt;') !== false) {
+            $content = html_entity_decode($content, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        }
+
+        // Excerpt & Meta Description
+        $raw_metad = (string)$xml->metad;
+        $meta_d = html_entity_decode($raw_metad, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $excerpt = $meta_d;
+
+        $private = trim((string)$xml->private);
+        $status  = ($private === 'Y') ? 'draft' : 'published';
+
+        // Parse date
+        $raw_date = (string)$xml->date;
+        $timestamp = !empty($raw_date) ? strtotime($raw_date) : filemtime($file);
+        if (!$timestamp) $timestamp = time();
+        $pub_at = date('Y-m-d H:i:s', $timestamp);
+        $upd_at = date('Y-m-d H:i:s', filemtime($file) ?: $timestamp);
+
+        // Normalize image
+        $image = trim((string)$xml->image);
+        if (strpos($image, 'data/uploads/') === 0) {
+            $image = substr($image, strlen('data/uploads/'));
+        }
+
+        // Author assignment
+        $raw_author = !empty($xml->author) ? trim((string)$xml->author) : $default_author_name;
+        $author_name = html_entity_decode($raw_author, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+        if (!isset($author_cache[$author_name])) {
+            $au_stmt = $nc_db->prepare("SELECT id FROM nc_authors WHERE name = ? LIMIT 1");
+            $au_stmt->execute([$author_name]);
+            $a_id = $au_stmt->fetchColumn();
+            if (!$a_id) {
+                $ins_au = $nc_db->prepare("INSERT INTO nc_authors (name, slug, bio, image) VALUES (?, ?, '', '')");
+                $ins_au->execute([$author_name, nc_sanitize_slug($author_name)]);
+                $a_id = (int)$nc_db->lastInsertId();
+                $counts['authors']++;
+            }
+            $author_cache[$author_name] = (int)$a_id;
+        }
+        $assigned_author_id = $author_cache[$author_name];
+
+        // Ensure unique slug
+        $base_slug = nc_sanitize_slug($slug);
+        $curr_slug = $base_slug;
+        $counter = 1;
+        while (true) {
+            $chk = $nc_db->prepare("SELECT id FROM nc_articles WHERE slug = ? LIMIT 1");
+            $chk->execute([$curr_slug]);
+            if (!$chk->fetchColumn()) {
+                break;
+            }
+            $curr_slug = $base_slug . '-' . $counter;
+            $counter++;
+        }
+
+        // Insert article
+        $ins = $nc_db->prepare("
+            INSERT INTO nc_articles (slug, title, excerpt, content, featured_image, gallery, status, author, meta_title, meta_description, published_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, '[]', ?, ?, ?, ?, ?, ?)
+        ");
+        $ins->execute([
+            $curr_slug,
+            $title,
+            $excerpt,
+            $content,
+            $image,
+            $status,
+            $author_name,
+            $title,
+            $meta_d,
+            $pub_at,
+            $upd_at
+        ]);
+        $new_post_id = (int)$nc_db->lastInsertId();
+        $counts['posts']++;
+
+        // Link author
+        if ($assigned_author_id > 0) {
+            $ins_aa = $nc_db->prepare("INSERT OR IGNORE INTO nc_article_authors (article_id, author_id) VALUES (?, ?)");
+            $ins_aa->execute([$new_post_id, $assigned_author_id]);
+        }
+
+        // Process Tags
+        $tags_str = trim((string)$xml->tags);
+        if ($tags_str !== '') {
+            $tags_arr = explode(',', $tags_str);
+            foreach ($tags_arr as $tag_raw) {
+                $tag_name = html_entity_decode(trim($tag_raw), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                if ($tag_name === '') continue;
+                $tag_slug = nc_sanitize_slug($tag_name);
+
+                $t_stmt = $nc_db->prepare("SELECT id FROM nc_tags WHERE slug = ? OR name = ? LIMIT 1");
+                $t_stmt->execute([$tag_slug, $tag_name]);
+                $tid = $t_stmt->fetchColumn();
+
+                if (!$tid) {
+                    $ins_t = $nc_db->prepare("INSERT INTO nc_tags (name, slug) VALUES (?, ?)");
+                    $ins_t->execute([$tag_name, $tag_slug]);
+                    $tid = (int)$nc_db->lastInsertId();
+                    $counts['tags']++;
+                }
+
+                $ins_at = $nc_db->prepare("INSERT OR IGNORE INTO nc_article_tags (article_id, tag_id) VALUES (?, ?)");
+                $ins_at->execute([$new_post_id, (int)$tid]);
+            }
+        }
+    }
+
+    if (function_exists('nc_generate_sitemap')) {
+        nc_generate_sitemap();
+    }
+
+    return [
+        'ok'      => true,
+        'posts'   => $counts['posts'],
+        'tags'    => $counts['tags'],
+        'authors' => $counts['authors']
+    ];
+}
+
+/**
  * Handle administrative GET delete actions before output starts.
  */
 function nc_handle_get_delete_actions() {
@@ -326,6 +678,28 @@ function nc_handle_get_delete_actions() {
 function nc_handle_post_actions($action) {
     nc_verify_csrf();
 
+    if ($action === 'migrate_simpleblog') {
+        $res = nc_migrate_from_simpleblog();
+        if (!empty($res['ok'])) {
+            $msg = urlencode("Imported {$res['posts']} posts, {$res['categories']} categories, and {$res['tags']} tags from SimpleBlog.");
+            redirect('load.php?id=' . NC_PLUGIN_ID . '&action=settings&status=migrated&msg=' . $msg);
+        } else {
+            $err = urlencode($res['error'] ?? 'Migration failed.');
+            redirect('load.php?id=' . NC_PLUGIN_ID . '&action=settings&status=error&msg=' . $err);
+        }
+    }
+
+    if ($action === 'migrate_news_manager') {
+        $res = nc_migrate_from_news_manager();
+        if (!empty($res['ok'])) {
+            $msg = urlencode("Imported {$res['posts']} posts and {$res['tags']} tags from News Manager.");
+            redirect('load.php?id=' . NC_PLUGIN_ID . '&action=settings&status=migrated&msg=' . $msg);
+        } else {
+            $err = urlencode($res['error'] ?? 'Migration failed.');
+            redirect('load.php?id=' . NC_PLUGIN_ID . '&action=settings&status=error&msg=' . $err);
+        }
+    }
+
     if ($action === 'save_article') {
         $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
         $title = trim($_POST['title'] ?? '');
@@ -337,7 +711,6 @@ function nc_handle_post_actions($action) {
         $published_at = !empty($_POST['published_at']) ? date('Y-m-d H:i:s', strtotime($_POST['published_at'])) : date('Y-m-d H:i:s');
         $author = defined('USR') ? USR : 'admin';
 
-        // Process Gallery JSON
         $raw_gallery = $_POST['gallery'] ?? '[]';
         $decoded = json_decode($raw_gallery, true);
         $clean_gallery = [];
@@ -376,7 +749,6 @@ function nc_handle_post_actions($action) {
 
         $saved_id = nc_save_article($data, $categories, $tags, $authors);
 
-        // Regenerate root sitemap.xml on disk immediately
         if (function_exists('nc_generate_sitemap')) {
             nc_generate_sitemap();
         }
@@ -485,7 +857,7 @@ function nc_date($format, $timestamp = null) {
     for ($i = 0; $i < $len; $i++) {
         $c = $format[$i];
 
-        if ($c === '\\') {                      // already-escaped character: copy as-is
+        if ($c === '\\') {
             $out .= $c;
             if ($i + 1 < $len) $out .= $format[++$i];
             continue;
@@ -500,7 +872,6 @@ function nc_date($format, $timestamp = null) {
         }
 
         if ($name !== null) {
-            // Escape ASCII letters so date() treats the name as literal text
             $out .= preg_replace('/([a-zA-Z])/', '\\\\$1', $name);
         } else {
             $out .= $c;
