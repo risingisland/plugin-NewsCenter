@@ -222,6 +222,14 @@ if (!function_exists('nc_reset_default_templates')) {
 .nc-share-item { display: flex; align-items: center; gap: 9px; padding: 8px 14px; font-size: 12.5px; color: #334155; text-decoration: none; background: none; border: none; width: 100%; text-align: left; cursor: pointer; box-sizing: border-box; transition: background 0.15s ease, color 0.15s ease; }
 .nc-share-item:hover { background: #f8fafc; color: #2563eb; }
 
+/* Boxed Frontend Pagination */
+.nc-frontend-pagination { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 35px 0 20px 0; flex-wrap: wrap; }
+.nc-page-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 38px; height: 38px; padding: 0 10px; font-size: 13.5px; font-weight: 600; color: #334155; text-decoration: none; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.2s ease; box-sizing: border-box; }
+.nc-page-btn:hover:not(.nc-page-disabled):not(.active) { background: #f8fafc; color: #2563eb; border-color: #94a3b8; transform: translateY(-1px); }
+.nc-page-btn.active { background: #2563eb; color: #ffffff; border-color: #2563eb; cursor: default; box-shadow: 0 2px 4px rgba(37,99,235,0.25); }
+.nc-page-btn.nc-page-disabled { color: #cbd5e1; background: #f8fafc; border-color: #e2e8f0; cursor: not-allowed; box-shadow: none; }
+.nc-page-prev, .nc-page-next { font-size: 16px; }
+
 /* Archive Headers */
 .nc-archive-header { display: flex; flex-direction: column; gap: 16px; margin: 20px 0 30px; padding-bottom: 20px; border-bottom: 2px solid #e2e8f0; }
 .nc-author-header { flex-direction: row; align-items: center; gap: 24px; }

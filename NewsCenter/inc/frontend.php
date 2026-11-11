@@ -328,10 +328,53 @@ function nc_build_url($type = '', $slug = '') {
     }
 }
 
-/**
- * Generates the complete sitemap.xml file containing both native CMS pages
- * and NewsCenter published articles, saving directly to root directory.
- */
+function nc_build_pagination_url($page_num, $filter_type = 'all', $filter_val = '') {
+    $settings = nc_get_settings();
+    $page_slug = !empty($settings['page_slug']) ? $settings['page_slug'] : 'news';
+    $trailing_slash = (!isset($settings['trailing_slash']) || $settings['trailing_slash'] === '1');
+    $fancy = (defined('PRETTYURLS') && PRETTYURLS == 1) || (isset($GLOBALS['PRETTYURLS']) && $GLOBALS['PRETTYURLS'] == 1);
+
+    $page_num = max(1, (int)$page_num);
+
+    if ($filter_type === 'all') {
+        if ($fancy) {
+            $base_url = rtrim(find_url($page_slug, ''), '/');
+            if ($page_num === 1) {
+                return $trailing_slash ? $base_url . '/' : $base_url;
+            }
+            $full = $base_url . '/page/' . $page_num;
+            return $trailing_slash ? $full . '/' : $full;
+        } else {
+            global $SITEURL;
+            $site_url = rtrim((string)$SITEURL, '/') . '/';
+            if ($page_num === 1) {
+                return $site_url . 'index.php?id=' . urlencode($page_slug);
+            }
+            return $site_url . 'index.php?id=' . urlencode($page_slug) . '&page=' . $page_num;
+        }
+    }
+
+    if ($fancy && in_array($filter_type, ['category', 'tag', 'author', 'archive'])) {
+        $base_url = rtrim(find_url($page_slug, ''), '/');
+        $tax_base = $base_url . '/' . rawurlencode($filter_type) . '/' . rawurlencode($filter_val);
+        $tax_base = $trailing_slash ? $tax_base . '/' : $tax_base;
+        return ($page_num === 1) ? $tax_base : $tax_base . '?page=' . $page_num;
+    }
+
+    global $SITEURL;
+    $site_url = rtrim((string)$SITEURL, '/') . '/';
+    $params = ['id' => $page_slug];
+    if ($filter_type === 'search') {
+        $params['nc_query'] = $filter_val;
+    } else {
+        $params[$filter_type] = $filter_val;
+    }
+    if ($page_num > 1) {
+        $params['page'] = $page_num;
+    }
+    return $site_url . 'index.php?' . http_build_query($params);
+}
+
 function nc_generate_sitemap() {
     global $SITEURL;
     $db = nc_get_db();
@@ -571,8 +614,14 @@ function nc_frontend_handler() {
             }
         }
     } else {
-        $base_url = nc_build_url();
-        nc_current_canonical($base_url);
+        $page_num = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $canonical_url = nc_build_pagination_url($page_num, 'all');
+        nc_current_canonical($canonical_url);
+
+        if ($fancy && $page_num > 1) {
+            $sub = $target_slug . '/page/' . $page_num;
+            $data_index->url = $trailing_slash ? $sub . '/' : $sub;
+        }
     }
 
     $data_index->content = nc_dispatch_frontend();
@@ -862,7 +911,7 @@ function nc_render_archive_list($filter_type = 'all', $filter_val = '') {
     $c_stmt = $db->prepare($count_sql);
     $c_stmt->execute($params);
     $total_items = (int)$c_stmt->fetchColumn();
-    $total_pages = ceil($total_items / $limit);
+    $total_pages = (int)ceil($total_items / $limit);
 
     $sql = "SELECT DISTINCT a.* FROM nc_articles a {$joins} {$where} ORDER BY a.published_at DESC LIMIT :limit OFFSET :offset";
     $stmt = $db->prepare($sql);
@@ -907,14 +956,34 @@ function nc_render_archive_list($filter_type = 'all', $filter_val = '') {
         }
 
         if ($total_pages > 1) {
-            $rendered_cards .= '<nav class="nc-frontend-pagination">';
-            $curr_params = $_GET;
-            for ($i = 1; $i <= $total_pages; $i++) {
-                $curr_params['page'] = $i;
-                $link = '?' . http_build_query($curr_params);
-                $active_cls = ($i === $page) ? ' class="active"' : '';
-                $rendered_cards .= '<a href="' . htmlspecialchars((string)$link, ENT_QUOTES, 'UTF-8') . '"' . $active_cls . '>' . $i . '</a> ';
+            $rendered_cards .= '<nav class="nc-frontend-pagination" aria-label="Page navigation">';
+
+            // Previous Button
+            if ($page > 1) {
+                $prev_url = nc_build_pagination_url($page - 1, $filter_type, $filter_val);
+                $rendered_cards .= '<a href="' . htmlspecialchars((string)$prev_url, ENT_QUOTES, 'UTF-8') . '" class="nc-page-btn nc-page-prev" rel="prev">&laquo;</a> ';
+            } else {
+                $rendered_cards .= '<span class="nc-page-btn nc-page-disabled">&laquo;</span> ';
             }
+
+            // Numbered Boxed Pages
+            for ($i = 1; $i <= $total_pages; $i++) {
+                if ($i === $page) {
+                    $rendered_cards .= '<span class="nc-page-btn active" aria-current="page">' . $i . '</span> ';
+                } else {
+                    $link = nc_build_pagination_url($i, $filter_type, $filter_val);
+                    $rendered_cards .= '<a href="' . htmlspecialchars((string)$link, ENT_QUOTES, 'UTF-8') . '" class="nc-page-btn">' . $i . '</a> ';
+                }
+            }
+
+            // Next Button
+            if ($page < $total_pages) {
+                $next_url = nc_build_pagination_url($page + 1, $filter_type, $filter_val);
+                $rendered_cards .= '<a href="' . htmlspecialchars((string)$next_url, ENT_QUOTES, 'UTF-8') . '" class="nc-page-btn nc-page-next" rel="next">&raquo;</a>';
+            } else {
+                $rendered_cards .= '<span class="nc-page-btn nc-page-disabled">&raquo;</span>';
+            }
+
             $rendered_cards .= '</nav>';
         }
     } else {
