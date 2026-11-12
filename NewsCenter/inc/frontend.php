@@ -869,7 +869,7 @@ function nc_render_single_post($slug) {
 }
 
 /**
- * Render archive / list view with dedicated category and author header templates
+ * Render archive / list view with dedicated category, author, and list_posts container templates
  */
 function nc_render_archive_list($filter_type = 'all', $filter_val = '') {
     $db = nc_get_db();
@@ -927,7 +927,9 @@ function nc_render_archive_list($filter_type = 'all', $filter_val = '') {
     $t_stmt->execute();
     $item_template = $t_stmt->fetchColumn();
 
-    $rendered_cards = '';
+    $rendered_items = '';
+    $pagination_html = '';
+
     if (!empty($articles)) {
         foreach ($articles as $art) {
             $excerpt = !empty($art['excerpt']) ? $art['excerpt'] : substr(strip_tags((string)$art['content']), 0, $excerpt_len) . '...';
@@ -952,43 +954,45 @@ function nc_render_archive_list($filter_type = 'all', $filter_val = '') {
                 'article.share'                => $art_share,
                 'news.url'                     => $news_url
             ];
-            $rendered_cards .= nc_render_template($item_template, $vars);
+            $rendered_items .= nc_render_template($item_template, $vars);
         }
 
         if ($total_pages > 1) {
-            $rendered_cards .= '<nav class="nc-frontend-pagination" aria-label="Page navigation">';
+            $pagination_html .= '<nav class="nc-frontend-pagination" aria-label="Page navigation">';
 
             // Previous Button
             if ($page > 1) {
                 $prev_url = nc_build_pagination_url($page - 1, $filter_type, $filter_val);
-                $rendered_cards .= '<a href="' . htmlspecialchars((string)$prev_url, ENT_QUOTES, 'UTF-8') . '" class="nc-page-btn nc-page-prev" rel="prev">&laquo;</a> ';
+                $pagination_html .= '<a href="' . htmlspecialchars((string)$prev_url, ENT_QUOTES, 'UTF-8') . '" class="nc-page-btn nc-page-prev" rel="prev">«</a> ';
             } else {
-                $rendered_cards .= '<span class="nc-page-btn nc-page-disabled">&laquo;</span> ';
+                $pagination_html .= '<span class="nc-page-btn nc-page-disabled">«</span> ';
             }
 
             // Numbered Boxed Pages
             for ($i = 1; $i <= $total_pages; $i++) {
                 if ($i === $page) {
-                    $rendered_cards .= '<span class="nc-page-btn active" aria-current="page">' . $i . '</span> ';
+                    $pagination_html .= '<span class="nc-page-btn active" aria-current="page">' . $i . '</span> ';
                 } else {
                     $link = nc_build_pagination_url($i, $filter_type, $filter_val);
-                    $rendered_cards .= '<a href="' . htmlspecialchars((string)$link, ENT_QUOTES, 'UTF-8') . '" class="nc-page-btn">' . $i . '</a> ';
+                    $pagination_html .= '<a href="' . htmlspecialchars((string)$link, ENT_QUOTES, 'UTF-8') . '" class="nc-page-btn">' . $i . '</a> ';
                 }
             }
 
             // Next Button
             if ($page < $total_pages) {
                 $next_url = nc_build_pagination_url($page + 1, $filter_type, $filter_val);
-                $rendered_cards .= '<a href="' . htmlspecialchars((string)$next_url, ENT_QUOTES, 'UTF-8') . '" class="nc-page-btn nc-page-next" rel="next">&raquo;</a>';
+                $pagination_html .= '<a href="' . htmlspecialchars((string)$next_url, ENT_QUOTES, 'UTF-8') . '" class="nc-page-btn nc-page-next" rel="next">»</a>';
             } else {
-                $rendered_cards .= '<span class="nc-page-btn nc-page-disabled">&raquo;</span>';
+                $pagination_html .= '<span class="nc-page-btn nc-page-disabled">»</span>';
             }
 
-            $rendered_cards .= '</nav>';
+            $pagination_html .= '</nav>';
         }
     } else {
-        $rendered_cards .= '<p class="nc-no-results">' . i18n_r('NewsCenter/NO_ARTICLES_FOUND') . '</p>';
+        $rendered_items .= '<p class="nc-no-results">' . i18n_r('NewsCenter/NO_ARTICLES_FOUND') . '</p>';
     }
+
+    $rendered_cards = $rendered_items . $pagination_html;
 
     if ($filter_type === 'category') {
         $cat = nc_current_category();
@@ -1058,15 +1062,27 @@ function nc_render_archive_list($filter_type = 'all', $filter_val = '') {
         return nc_render_template($a_tpl, $a_vars);
     }
 
-    $output = '<div class="nc-news-feed">';
+    // Main feed, search, tag, and monthly archive rendering via list_posts container
+    $heading_html = '';
     if ($filter_type === 'search') {
-        $output .= '<div class="nc-filter-heading"><h3>' . i18n_r('NewsCenter/SEARCH_RESULTS_FOR') . ' <em>"' . htmlspecialchars((string)$filter_val, ENT_QUOTES, 'UTF-8') . '"</em></h3></div>';
+        $heading_html = '<div class="nc-filter-heading"><h3>' . i18n_r('NewsCenter/SEARCH_RESULTS_FOR') . ' <em>"' . htmlspecialchars((string)$filter_val, ENT_QUOTES, 'UTF-8') . '"</em></h3></div>';
     } elseif ($filter_type === 'tag' || $filter_type === 'archive') {
-        $output .= '<div class="nc-filter-heading"><h3>' . ucfirst($filter_type) . ': <em>' . htmlspecialchars((string)$filter_val, ENT_QUOTES, 'UTF-8') . '</em></h3></div>';
+        $heading_html = '<div class="nc-filter-heading"><h3>' . ucfirst($filter_type) . ': <em>' . htmlspecialchars((string)$filter_val, ENT_QUOTES, 'UTF-8') . '</em></h3></div>';
     }
-    $output .= $rendered_cards;
-    $output .= '</div>';
-    return $output;
+
+    $list_tpl = $db->query("SELECT content FROM nc_templates WHERE template_key = 'list_posts' LIMIT 1")->fetchColumn();
+    if (!$list_tpl) {
+        nc_reset_default_templates();
+        $list_tpl = $db->query("SELECT content FROM nc_templates WHERE template_key = 'list_posts' LIMIT 1")->fetchColumn();
+    }
+
+    $list_vars = [
+        'list.items'       => $rendered_items,
+        'posts.pagination' => $pagination_html,
+        'news.url'         => $news_url
+    ];
+
+    return $heading_html . nc_render_template($list_tpl, $list_vars);
 }
 
 /**

@@ -53,6 +53,7 @@ $i18n = [
     'RESTORE_DEFAULT'          => 'Restore Default',
     'CONFIRM_RESTORE'          => 'Reset this template back to factory defaults? Any custom edits to this template will be lost.',
     'TPL_SINGLE'               => 'Single Article Template (single)',
+    'TPL_LIST_POSTS'           => 'Article List Container (list_posts)',
     'TPL_LIST_ITEM'            => 'Article List Item Template (list_item)',
     'TPL_HOME_POSTS'           => 'Home Page Posts Grid Container (home_posts)',
     'TPL_HOME_ITEM'            => 'Home Page Post Card Item (home_item)',

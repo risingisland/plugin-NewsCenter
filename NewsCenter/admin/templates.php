@@ -6,6 +6,7 @@ $db = nc_get_db();
 // Registered template choices
 $template_options = [
     'single'           => i18n_r('NewsCenter/TPL_SINGLE'),
+    'list_posts'       => i18n_r('NewsCenter/TPL_LIST_POSTS'),
     'list_item'        => i18n_r('NewsCenter/TPL_LIST_ITEM'),
     'home_posts'       => i18n_r('NewsCenter/TPL_HOME_POSTS'),
     'home_item'        => i18n_r('NewsCenter/TPL_HOME_ITEM'),

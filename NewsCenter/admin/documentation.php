@@ -74,6 +74,30 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
   line-height: 1.5;
   color: #f1f5f9;
 }
+.nc-migration-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+.nc-migration-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 16px;
+}
+.nc-migration-box h4 {
+  margin: 0 0 8px 0;
+  font-size: 15px;
+  color: #0f172a;
+}
+.nc-migration-box ul {
+  margin: 8px 0 0 18px;
+  padding: 0;
+  font-size: 13.5px;
+  color: #475569;
+  line-height: 1.6;
+}
 </style>
 
 <div class="nc-container">
@@ -221,7 +245,7 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
         </tr>
         <tr>
           <td><code>{{article.url}}</code></td>
-          <td>List, Home</td>
+          <td>Single, List, Home</td>
           <td>Full web URL linking to the post.</td>
         </tr>
         <tr>
@@ -262,7 +286,7 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
         <tr>
           <td><code>{{article.share}}</code></td>
           <td>Single, List, Home</td>
-          <td>Interactive dropdown button offering Copy Link, X (Twitter), Facebook, WhatsApp, and Email.</td>
+          <td>Interactive dropdown button offering Copy Link, X (Twitter), Facebook, WhatsApp, and Email (plus native mobile Web Share).</td>
         </tr>
         <tr>
           <td><code>{{article.excerpt}}</code></td>
@@ -375,9 +399,19 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
           <td>Renders all individual category cards.</td>
         </tr>
         <tr>
+          <td><code>{{list.items}}</code></td>
+          <td>Article List Container (<code>list_posts</code>)</td>
+          <td>Renders all individual <code>list_item</code> article cards in the main feed and archive listings.</td>
+        </tr>
+        <tr>
+          <td><code>{{posts.pagination}}</code></td>
+          <td>Article List Container (<code>list_posts</code>)</td>
+          <td>Renders boxed numeric pagination links (<code>« 1 2 3 »</code>) when total posts exceed articles per page.</td>
+        </tr>
+        <tr>
           <td><code>{{articles.list}}</code></td>
           <td>Category Archive, Author Archive</td>
-          <td>Rendered list of article cards matching the active archive view.</td>
+          <td>Rendered list of article cards and pagination matching the active category or author archive view.</td>
         </tr>
         <tr>
           <td><code>{{section.title}}</code></td>
@@ -397,7 +431,7 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
         <tr>
           <td><code>frontend_css</code></td>
           <td>Templates Dropdown</td>
-          <td>Full frontend stylesheet controlling typography, grid layout, cards, and lightbox galleries via CodeMirror.</td>
+          <td>Full frontend stylesheet controlling typography, grid layout, cards, share dropdowns, pagination, and lightbox galleries via CodeMirror.</td>
         </tr>
       </tbody>
     </table>
@@ -427,6 +461,36 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
 {{if:category.has_image}}
   &lt;img src="{{category.image}}" alt="{{category.name}}" class="cat-banner"&gt;
 {{/if:category.has_image}}</code></pre>
+    </div>
+  </div>
+
+  <!-- 6. Data Migration from Other Plugins -->
+  <div class="nc-doc-card">
+    <h3>6. <?= i18n_r('NewsCenter/MIGRATION_TITLE') ?></h3>
+    <p>NewsCenter includes built-in one-click importers under <strong>NewsCenter → Settings</strong> that automatically appear whenever existing data from supported plugins is detected on your installation. Source files and databases are read safely without modifying or deleting your original data.</p>
+
+    <div class="nc-migration-grid">
+      <div class="nc-migration-box">
+        <h4>SimpleBlog Importer (<code>data/other/blog.db</code>)</h4>
+        <p style="font-size:13px; margin-bottom:8px;">Automatically detected when <code>data/other/blog.db</code> exists:</p>
+        <ul>
+          <li>Imports all published and draft posts, preserving publication dates, excerpts, and SEO meta descriptions.</li>
+          <li>Migrates all categories and tags, preserving post relationships.</li>
+          <li>Converts SimpleBlog cover photos and JSON photo galleries into NewsCenter's native GLightbox schema.</li>
+          <li>Assigns imported entries to the active CMS administrator and automatically rebuilds <code>sitemap.xml</code>.</li>
+        </ul>
+      </div>
+
+      <div class="nc-migration-box">
+        <h4>News Manager Importer (<code>data/posts/*.xml</code>)</h4>
+        <p style="font-size:13px; margin-bottom:8px;">Automatically detected when XML post files exist in <code>data/posts/</code>:</p>
+        <ul>
+          <li>Parses all XML post files, mapping public posts to <em>Published</em> and <code><private>Y</private></code> posts to <em>Draft</em>.</li>
+          <li>Decodes single- and double-encoded HTML entities in post content, titles, and metadata so rich formatting renders cleanly.</li>
+          <li>Extracts comma-separated <code><tags></code> and <code><author></code> attributes, creating matching NewsCenter tags and author profiles.</li>
+          <li>Normalizes featured image paths and regenerates <code>sitemap.xml</code> upon completion.</li>
+        </ul>
+      </div>
     </div>
   </div>
 </div>

@@ -34,6 +34,13 @@ if (!function_exists('nc_reset_default_templates')) {
   </footer>
 </article>'
             ],
+            'list_posts' => [
+                'title'   => 'Article List Container',
+                'content' => '<div class="nc-news-feed">
+  {{list.items}}
+  {{posts.pagination}}
+</div>'
+            ],
             'list_item' => [
                 'title'   => 'Article List Item Template',
                 'content' => '<article class="nc-card">

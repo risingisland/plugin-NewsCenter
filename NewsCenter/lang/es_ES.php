@@ -53,6 +53,7 @@ $i18n = [
     'RESTORE_DEFAULT'          => 'Restaurar por defecto',
     'CONFIRM_RESTORE'          => '¿Restablecer esta plantilla a los valores predeterminados de fábrica? Se perderán las modificaciones personalizadas.',
     'TPL_SINGLE'               => 'Plantilla de artículo individual (single)',
+    'TPL_LIST_POSTS'           => 'Contenedor de lista de artículos (list_posts)',
     'TPL_LIST_ITEM'            => 'Plantilla de elemento de lista de artículos (list_item)',
     'TPL_HOME_POSTS'           => 'Contenedor de cuadrícula de artículos de portada (home_posts)',
     'TPL_HOME_ITEM'            => 'Elemento de tarjeta de artículo de portada (home_item)',
