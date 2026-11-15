@@ -943,6 +943,7 @@ function nc_render_archive_list($filter_type = 'all', $filter_val = '') {
                 'article.url'                  => htmlspecialchars((string)$art_url, ENT_QUOTES, 'UTF-8'),
                 'article.excerpt'              => htmlspecialchars((string)$excerpt, ENT_QUOTES, 'UTF-8'),
                 'article.date'                 => nc_date($date_format, strtotime($art['published_at'])),
+                'article.date_raw'             => $art['published_at'],
                 'article.author'               => $author_meta['author_name'],
                 'article.author_url'           => htmlspecialchars((string)$author_meta['author_url'], ENT_QUOTES, 'UTF-8'),
                 'article.authors'              => $author_meta['authors'],
@@ -960,7 +961,6 @@ function nc_render_archive_list($filter_type = 'all', $filter_val = '') {
         if ($total_pages > 1) {
             $pagination_html .= '<nav class="nc-frontend-pagination" aria-label="Page navigation">';
 
-            // Previous Button
             if ($page > 1) {
                 $prev_url = nc_build_pagination_url($page - 1, $filter_type, $filter_val);
                 $pagination_html .= '<a href="' . htmlspecialchars((string)$prev_url, ENT_QUOTES, 'UTF-8') . '" class="nc-page-btn nc-page-prev" rel="prev">«</a> ';
@@ -968,7 +968,6 @@ function nc_render_archive_list($filter_type = 'all', $filter_val = '') {
                 $pagination_html .= '<span class="nc-page-btn nc-page-disabled">«</span> ';
             }
 
-            // Numbered Boxed Pages
             for ($i = 1; $i <= $total_pages; $i++) {
                 if ($i === $page) {
                     $pagination_html .= '<span class="nc-page-btn active" aria-current="page">' . $i . '</span> ';
@@ -978,7 +977,6 @@ function nc_render_archive_list($filter_type = 'all', $filter_val = '') {
                 }
             }
 
-            // Next Button
             if ($page < $total_pages) {
                 $next_url = nc_build_pagination_url($page + 1, $filter_type, $filter_val);
                 $pagination_html .= '<a href="' . htmlspecialchars((string)$next_url, ENT_QUOTES, 'UTF-8') . '" class="nc-page-btn nc-page-next" rel="next">»</a>';
@@ -1146,6 +1144,7 @@ function nc_get_recent_posts_html($limit = 3, $category_slug = '', $title = 'Lat
             'article.url'                  => htmlspecialchars((string)$art_url, ENT_QUOTES, 'UTF-8'),
             'article.excerpt'              => htmlspecialchars((string)$excerpt, ENT_QUOTES, 'UTF-8'),
             'article.date'                 => nc_date($date_format, strtotime($art['published_at'])),
+            'article.date_raw'             => $art['published_at'],
             'article.author'               => $author_meta['author_name'],
             'article.author_url'           => htmlspecialchars((string)$author_meta['author_url'], ENT_QUOTES, 'UTF-8'),
             'article.authors'              => $author_meta['authors'],

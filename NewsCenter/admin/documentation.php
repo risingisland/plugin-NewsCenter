@@ -304,8 +304,13 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
           <td>Formatted date matching your settings and locale.</td>
         </tr>
         <tr>
+          <td><code>{{article.date('FORMAT')}}</code></td>
+          <td>Single, List, Home</td>
+          <td>Custom localized PHP date format segment (e.g. <code>{{article.date('F')}}</code>, <code>{{article.date('j')}}</code>, <code>{{article.date('Y')}}</code>).</td>
+        </tr>
+        <tr>
           <td><code>{{article.date_raw}}</code></td>
-          <td>Single</td>
+          <td>Single, List, Home</td>
           <td>Raw ISO datetime string for HTML5 <code>&lt;time&gt;</code> tags.</td>
         </tr>
         <tr>
@@ -438,11 +443,18 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
 
     <h4 style="margin-top:20px;"><?= i18n_r('NewsCenter/DOCS_CONDITIONALS_TITLE') ?></h4>
     <div class="nc-code-wrapper">
-      <div class="nc-code-header">
-        <span>Image &amp; Bio Conditionals Example</span>
-        <button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)"><?= $svgCopy ?> Copy</button>
-      </div>
-      <pre><code>{{if:article.has_image}}
+	<div class="nc-code-header">
+		<span>Image, Bio &amp; Custom Date Block Example</span>
+		<button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)"><?= $svgCopy ?> Copy</button>
+	</div>
+	<pre><code>
+	&lt;div class="postdate">
+      		&lt;div class="month">{{article.date('F')}}&lt;/div>
+      		&lt;div class="day">{{article.date('j')}}&lt;/div>
+		&lt;div class="year">{{article.date('Y')}}&lt;/div>
+	&lt;/div>
+
+{{if:article.has_image}}
   &lt;div class="featured-img"&gt;&lt;img src="{{article.featured_image_thumb}}" alt="{{article.title}}"&gt;&lt;/div&gt;
 {{/if:article.has_image}}
 
