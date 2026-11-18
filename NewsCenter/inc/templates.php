@@ -297,7 +297,7 @@ if (!function_exists('nc_reset_default_templates')) {
 
 /**
  * Render a template string by replacing placeholders and parsing basic conditionals.
- * Supports parameterized date placeholders such as {{article.date('F')}} or {{article.date('j')}}.
+ * Supports parameterized date placeholders such as {{article.date('F')}} or {{article.updated('j')}}.
  */
 if (!function_exists('nc_render_template')) {
     function nc_render_template($template_str, $vars = []) {
@@ -317,15 +317,19 @@ if (!function_exists('nc_render_template')) {
             return (empty($vars[$key])) ? $inner : '';
         }, $template_str);
 
-        $template_str = preg_replace_callback('/\{\{article\.date\([\'"]([^\'"]+)[\'"]\)\}\}/', function($matches) use ($vars) {
-            $format = $matches[1];
-            if (!empty($vars['article.date_raw'])) {
-                $ts = strtotime((string)$vars['article.date_raw']);
+        $template_str = preg_replace_callback('/\{\{article\.(date|updated)\([\'"]([^\'"]+)[\'"]\)\}\}/', function($matches) use ($vars) {
+            $field = $matches[1];
+            $format = $matches[2];
+            $raw_key = ($field === 'updated') ? 'article.updated_raw' : 'article.date_raw';
+            $fallback_key = ($field === 'updated') ? 'article.updated' : 'article.date';
+
+            if (!empty($vars[$raw_key])) {
+                $ts = strtotime((string)$vars[$raw_key]);
                 if ($ts !== false) {
                     return function_exists('nc_date') ? nc_date($format, $ts) : date($format, $ts);
                 }
             }
-            return isset($vars['article.date']) ? (string)$vars['article.date'] : '';
+            return isset($vars[$fallback_key]) ? (string)$vars[$fallback_key] : '';
         }, $template_str);
 
         $template_str = preg_replace_callback('/\{\{([a-zA-Z0-9_\.]+)\}\}/', function($matches) use ($vars) {

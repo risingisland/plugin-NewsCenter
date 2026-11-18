@@ -32,6 +32,27 @@ function nc_current_author($set = null) {
 }
 
 /**
+ * Calculates localized estimated read time string (e.g. "Read time: 3 min.")
+ */
+function nc_calculate_read_time($html_content, $wpm = 200) {
+    $plain = trim(strip_tags((string)$html_content));
+    if ($plain === '') {
+        $minutes = 1;
+    } else {
+        $words = preg_split('/\s+/u', $plain, -1, PREG_SPLIT_NO_EMPTY);
+        $word_count = is_array($words) ? count($words) : 0;
+        $minutes = max(1, (int)ceil($word_count / max(1, (int)$wpm)));
+    }
+
+    $tpl = i18n_r('NewsCenter/READ_TIME_FORMAT');
+    if (empty($tpl) || $tpl[0] === '{') {
+        $tpl = 'Read time: {min} min.';
+    }
+
+    return str_replace('{min}', (string)$minutes, $tpl);
+}
+
+/**
  * Resolves the native GetSimple thumbnail for an article's featured image
  * using nc_thumb_url() from helpers.php.
  */
@@ -842,6 +863,7 @@ function nc_render_single_post($slug) {
     $post_url = nc_build_url('post', $article['slug']);
     $thumb_url = !empty($article['featured_image']) ? nc_get_article_thumb_url($article['featured_image']) : '';
     $share_widget = nc_render_share_widget($post_url, $article['title']);
+    $updated_raw = !empty($article['updated_at']) ? $article['updated_at'] : $article['published_at'];
 
     $vars = [
         'article.title'                => htmlspecialchars((string)$article['title'], ENT_QUOTES, 'UTF-8'),
@@ -851,6 +873,10 @@ function nc_render_single_post($slug) {
         'article.excerpt'              => htmlspecialchars((string)$article['excerpt'], ENT_QUOTES, 'UTF-8'),
         'article.date'                 => nc_date($date_format, strtotime($article['published_at'])),
         'article.date_raw'             => $article['published_at'],
+        'article.updated'              => nc_date($date_format, strtotime($updated_raw)),
+        'article.updated_raw'          => $updated_raw,
+        'article.has_updated'          => !empty($article['updated_at']),
+        'article.readtime'             => nc_calculate_read_time($article['content']),
         'article.author'               => $author_meta['author_name'],
         'article.author_url'           => htmlspecialchars((string)$author_meta['author_url'], ENT_QUOTES, 'UTF-8'),
         'article.authors'              => $author_meta['authors'],
@@ -937,6 +963,7 @@ function nc_render_archive_list($filter_type = 'all', $filter_val = '') {
             $thumb_url = !empty($art['featured_image']) ? nc_get_article_thumb_url($art['featured_image']) : '';
             $art_url = nc_build_url('post', $art['slug']);
             $art_share = nc_render_share_widget($art_url, $art['title']);
+            $updated_raw = !empty($art['updated_at']) ? $art['updated_at'] : $art['published_at'];
 
             $vars = [
                 'article.title'                => htmlspecialchars((string)$art['title'], ENT_QUOTES, 'UTF-8'),
@@ -944,6 +971,10 @@ function nc_render_archive_list($filter_type = 'all', $filter_val = '') {
                 'article.excerpt'              => htmlspecialchars((string)$excerpt, ENT_QUOTES, 'UTF-8'),
                 'article.date'                 => nc_date($date_format, strtotime($art['published_at'])),
                 'article.date_raw'             => $art['published_at'],
+                'article.updated'              => nc_date($date_format, strtotime($updated_raw)),
+                'article.updated_raw'          => $updated_raw,
+                'article.has_updated'          => !empty($art['updated_at']),
+                'article.readtime'             => nc_calculate_read_time($art['content']),
                 'article.author'               => $author_meta['author_name'],
                 'article.author_url'           => htmlspecialchars((string)$author_meta['author_url'], ENT_QUOTES, 'UTF-8'),
                 'article.authors'              => $author_meta['authors'],
@@ -1138,6 +1169,7 @@ function nc_get_recent_posts_html($limit = 3, $category_slug = '', $title = 'Lat
         $thumb_url = !empty($art['featured_image']) ? nc_get_article_thumb_url($art['featured_image']) : '';
         $art_url = nc_build_url('post', $art['slug']);
         $art_share = nc_render_share_widget($art_url, $art['title']);
+        $updated_raw = !empty($art['updated_at']) ? $art['updated_at'] : $art['published_at'];
 
         $vars = [
             'article.title'                => htmlspecialchars((string)$art['title'], ENT_QUOTES, 'UTF-8'),
@@ -1145,6 +1177,10 @@ function nc_get_recent_posts_html($limit = 3, $category_slug = '', $title = 'Lat
             'article.excerpt'              => htmlspecialchars((string)$excerpt, ENT_QUOTES, 'UTF-8'),
             'article.date'                 => nc_date($date_format, strtotime($art['published_at'])),
             'article.date_raw'             => $art['published_at'],
+            'article.updated'              => nc_date($date_format, strtotime($updated_raw)),
+            'article.updated_raw'          => $updated_raw,
+            'article.has_updated'          => !empty($art['updated_at']),
+            'article.readtime'             => nc_calculate_read_time($art['content']),
             'article.author'               => $author_meta['author_name'],
             'article.author_url'           => htmlspecialchars((string)$author_meta['author_url'], ENT_QUOTES, 'UTF-8'),
             'article.authors'              => $author_meta['authors'],

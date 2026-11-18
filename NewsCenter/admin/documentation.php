@@ -289,6 +289,11 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
           <td>Interactive dropdown button offering Copy Link, X (Twitter), Facebook, WhatsApp, and Email (plus native mobile Web Share).</td>
         </tr>
         <tr>
+          <td><code>{{article.readtime}}</code></td>
+          <td>Single, List, Home</td>
+          <td>Localized estimated reading time calculated from article length (e.g. <code>Read time: 3 min.</code>).</td>
+        </tr>
+        <tr>
           <td><code>{{article.excerpt}}</code></td>
           <td>Single, List, Home</td>
           <td>Trimmed summary text.</td>
@@ -301,7 +306,7 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
         <tr>
           <td><code>{{article.date}}</code></td>
           <td>Single, List, Home</td>
-          <td>Formatted date matching your settings and locale.</td>
+          <td>Formatted publication date matching your settings and locale.</td>
         </tr>
         <tr>
           <td><code>{{article.date('FORMAT')}}</code></td>
@@ -312,6 +317,21 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
           <td><code>{{article.date_raw}}</code></td>
           <td>Single, List, Home</td>
           <td>Raw ISO datetime string for HTML5 <code>&lt;time&gt;</code> tags.</td>
+        </tr>
+        <tr>
+          <td><code>{{article.updated}}</code></td>
+          <td>Single, List, Home</td>
+          <td>Formatted last updated date matching your settings and locale.</td>
+        </tr>
+        <tr>
+          <td><code>{{article.updated('FORMAT')}}</code></td>
+          <td>Single, List, Home</td>
+          <td>Custom localized PHP date format segment for the last updated timestamp (e.g. <code>{{article.updated('Y-m-d')}}</code>).</td>
+        </tr>
+        <tr>
+          <td><code>{{article.updated_raw}}</code></td>
+          <td>Single, List, Home</td>
+          <td>Raw ISO datetime string for the last updated timestamp.</td>
         </tr>
         <tr>
           <td><code>{{article.categories}}</code></td>
@@ -448,11 +468,18 @@ if (!defined('IN_GS')) { die('Direct access denied.'); }
 		<button type="button" class="nc-code-copy-btn" onclick="ncCopyCode(this)"><?= $svgCopy ?> Copy</button>
 	</div>
 	<pre><code>
-	&lt;div class="postdate">
-      		&lt;div class="month">{{article.date('F')}}&lt;/div>
-      		&lt;div class="day">{{article.date('j')}}&lt;/div>
-		&lt;div class="year">{{article.date('Y')}}&lt;/div>
-	&lt;/div>
+&lt;div class="postdate">
+	&lt;div class="month">{{article.date('F')}}&lt;/div>
+	&lt;div class="day">{{article.date('j')}}&lt;/div>
+	&lt;div class="year">{{article.date('Y')}}&lt;/div>
+&lt;/div>
+
+&lt;div class="post-meta-extra">
+  &lt;span class="read-time">{{article.readtime}}&lt;/span>
+  {{if:article.has_updated}}
+    &lt;span class="last-updated">Last updated: {{article.updated}}&lt;/span>
+  {{/if:article.has_updated}}
+&lt;/div>
 
 {{if:article.has_image}}
   &lt;div class="featured-img"&gt;&lt;img src="{{article.featured_image_thumb}}" alt="{{article.title}}"&gt;&lt;/div&gt;
